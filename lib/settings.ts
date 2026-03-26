@@ -14,8 +14,12 @@ const defaultSettings: ShopSettings = {
 };
 
 export function getSettingsPath() {
+<<<<<<< HEAD
   const appDataPath = process.env.APP_DATA_PATH || process.cwd();
   return path.join(appDataPath, "settings.json");
+=======
+  return path.join(process.cwd(), "settings.json");
+>>>>>>> b7c7ea63851aefeb00e32bf037964ec6794c2e19
 }
 
 export function readSettings(): ShopSettings {

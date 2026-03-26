@@ -1,14 +1,18 @@
 const { app, BrowserWindow } = require("electron");
 const path = require("path");
 const http = require("http");
+<<<<<<< HEAD
 const fs = require("fs");
 const Module = require("module");
+=======
+>>>>>>> b7c7ea63851aefeb00e32bf037964ec6794c2e19
 const next = require("next");
 
 const isDev = !app.isPackaged;
 const port = process.env.PORT || 3000;
 let server;
 
+<<<<<<< HEAD
 const originalResolveFilename = Module._resolveFilename;
 Module._resolveFilename = function patchedResolve(request, parent, isMain, options) {
   if (request.startsWith("@prisma/client/runtime/")) {
@@ -70,10 +74,14 @@ async function prepareRuntimeFiles() {
 async function createWindow() {
   await prepareRuntimeFiles();
 
+=======
+async function createWindow() {
+>>>>>>> b7c7ea63851aefeb00e32bf037964ec6794c2e19
   const nextApp = next({ dev: isDev, dir: path.join(__dirname, "..") });
   const handle = nextApp.getRequestHandler();
   await nextApp.prepare();
 
+<<<<<<< HEAD
   server = http.createServer(async (req, res) => {
     try {
       await handle(req, res);
@@ -89,6 +97,10 @@ async function createWindow() {
     server.once("error", reject);
     server.listen(port, () => resolve());
   });
+=======
+  server = http.createServer((req, res) => handle(req, res));
+  server.listen(port);
+>>>>>>> b7c7ea63851aefeb00e32bf037964ec6794c2e19
 
   const win = new BrowserWindow({
     width: 1400,
@@ -103,6 +115,7 @@ async function createWindow() {
 
 app.whenReady().then(createWindow);
 
+<<<<<<< HEAD
 process.on("uncaughtException", (error) => {
   console.error("Uncaught exception:", error);
 });
@@ -111,6 +124,8 @@ process.on("unhandledRejection", (error) => {
   console.error("Unhandled rejection:", error);
 });
 
+=======
+>>>>>>> b7c7ea63851aefeb00e32bf037964ec6794c2e19
 app.on("window-all-closed", () => {
   if (server) server.close();
   if (process.platform !== "darwin") app.quit();
