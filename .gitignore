@@ -1,0 +1,75 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.npm
+.pnpm-store
+.cache
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+/.nyc_output
+/reports
+
+# next.js
+/.next/
+/out/
+/app/.next/
+
+# production
+/build
+/dist
+/release
+/electron/dist
+
+# electron-builder artifacts
+*.exe
+*.dmg
+*.AppImage
+/builder-debug.yml
+/builder-effective-config.yaml
+
+# misc
+.DS_Store
+*.pem
+*.log
+*.tmp
+.idea
+.vscode
+Thumbs.db
+desktop.ini
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# prisma/sqlite
+/prisma/dev.db
+/prisma/*.db-journal
+/prisma/migrations/dev.db
+/node_modules/.prisma
+
+# app settings/cache
+/settings.json
+/tmp
+/uploads
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
