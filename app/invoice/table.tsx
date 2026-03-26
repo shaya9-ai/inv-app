@@ -109,12 +109,13 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
         <body>
           <div style="display:flex; justify-content:space-between; align-items:flex-start;">
             <div>
-              <h1>Invoice</h1>
-              <p>${inv.customerName} (${inv.customerPhone ?? "-"})</p>
+              <h1 style="margin:0 0 4px 0;">Invoice</h1>
+              <p style="margin:0 0 6px 0;">S• PRINT TECH MOBILE ACCESSORIES</p>
+              <p style="margin:0;">${inv.customerName || "Customer"} (${inv.customerPhone || ""})</p>
             </div>
             <div style="text-align:right">
-              <p>#${inv.invoiceNumber}</p>
-              <p>${format(inv.createdAt, "PPpp")}</p>
+              <p style="margin:0 0 4px 0;">#${inv.invoiceNumber}</p>
+              <p style="margin:0 0 4px 0;">${format(inv.createdAt, "PPpp")}</p>
             </div>
           </div>
           <table>
@@ -133,7 +134,12 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
           <p style="text-align:right; margin-top:12px;">Subtotal: Rs ${numbers.subtotal.toFixed(2)}</p>
           <p style="text-align:right;">Discount: ${inv.discount} ${inv.discountType}</p>
           <p style="text-align:right; font-weight:bold; font-size:16px;">Grand Total: Rs ${numbers.total.toFixed(2)}</p>
-          <p style="margin-top:18px;">Thank you for your business!</p>
+          <div style="margin-top:18px;">
+            <p style="margin:0 0 6px 0;">Thank you for your business!</p>
+            <p style="margin:0;">Luckyone Mall first floor opp.ideas by</p>
+            <p style="margin:0 0 4px 0;">gul ahmed</p>
+            <p style="margin:0;">Contact no: 03012276178</p>
+          </div>
         </body>
       </html>
     `);

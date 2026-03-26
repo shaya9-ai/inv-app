@@ -110,12 +110,13 @@ export default function InventoryGrid({ products: initial }: Props) {
         <body>
           <div style="display:flex; justify-content:space-between; align-items:flex-start;">
             <div>
-              <h1>Invoice</h1>
-              <p>${invoice.customerName} (${invoice.customerPhone ?? "-"})</p>
+              <h1 style="margin:0 0 4px 0;">Invoice</h1>
+              <p style="margin:0 0 6px 0;">S• PRINT TECH MOBILE ACCESSORIES</p>
+              <p style="margin:0;">${invoice.customerName || "Customer"} (${invoice.customerPhone || ""})</p>
             </div>
             <div style="text-align:right">
-              <p>#${invoice.invoiceNumber}</p>
-              <p>${invoice.createdAt}</p>
+              <p style="margin:0 0 4px 0;">#${invoice.invoiceNumber}</p>
+              <p style="margin:0;">${invoice.createdAt}</p>
             </div>
           </div>
           <table>
@@ -134,7 +135,12 @@ export default function InventoryGrid({ products: initial }: Props) {
           <p style="text-align:right; margin-top:12px;">Subtotal: Rs ${numbers.subtotal.toFixed(2)}</p>
           <p style="text-align:right;">Discount: Rs ${invoice.discount} ${invoice.discountType}</p>
           <p style="text-align:right; font-weight:bold; font-size:16px;">Grand Total: Rs ${numbers.total.toFixed(2)}</p>
-          <p style="margin-top:18px;">Thank you for your business!</p>
+          <div style="margin-top:18px;">
+            <p style="margin:0 0 6px 0;">Thank you for your business!</p>
+            <p style="margin:0;">Luckyone Mall first floor opp.ideas by</p>
+            <p style="margin:0 0 4px 0;">gul ahmed</p>
+            <p style="margin:0;">03012276178 (phone and WhatsApp)</p>
+          </div>
         </body>
       </html>
     `);
