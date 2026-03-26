@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0b0b10;
+  --foreground: #f5f5f5;
+  --accent: #f7c848;
+  --muted: #161622;
+  --card: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.05), rgba(255,255,255,0) 35%), #0f0f17;
+  --border: rgba(255, 255, 255, 0.08);
+  --glow: rgba(247, 200, 72, 0.35);
+  --shadow-strong: 0 25px 80px rgba(0, 0, 0, 0.45);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-muted: var(--muted);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: radial-gradient(circle at 10% 20%, rgba(247, 200, 72, 0.08), transparent 25%),
+    radial-gradient(circle at 90% 10%, rgba(88, 132, 255, 0.08), transparent 20%),
+    linear-gradient(135deg, #0c0c12 0%, #07070c 50%, #090912 100%);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-strong);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass {
+  background: linear-gradient(135deg, rgba(240, 192, 64, 0.08), rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+}
+
+.btn-primary {
+  background: linear-gradient(120deg, #ffd977, #f7c848 55%, #e7ac2f);
+  color: #0b0b10;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px rgba(240, 192, 64, 0.3);
+}
+
+.btn:hover {
+  border-color: var(--border);
+  transform: translateY(-1px);
+}
+
+.input {
+  background: #0f0f17;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: #f5f5f5;
+}
+
+.chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine::after {
+  content: "";
+  position: absolute;
+  inset: -60%;
+  background: linear-gradient(120deg, transparent 20%, rgba(255,255,255,0.12), transparent 80%);
+  transform: rotate(12deg);
+  transition: opacity 0.2s ease, transform 0.6s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.shine:hover::after {
+  opacity: 1;
+  transform: translateX(40%) rotate(12deg);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-in-right {
+  from { transform: translateX(30px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes scale-in {
+  from { transform: scale(0.97); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.animate-fade-in { animation: fade-in 240ms ease forwards; }
+.animate-slide-in-right { animation: slide-in-right 260ms ease forwards; }
+.animate-scale-in { animation: scale-in 200ms ease forwards; }
+
+.shadow-glow { box-shadow: 0 0 0 1px var(--border), 0 20px 50px rgba(0,0,0,0.35), 0 0 25px var(--glow); }
+
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+}

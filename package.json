@@ -1,0 +1,65 @@
+{
+  "name": "inv",
+  "version": "0.1.0",
+  "private": true,
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "prisma": "prisma",
+    "dist": "npm run build && electron-builder -w"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.2",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "electron": "^30.0.0",
+    "lucide-react": "^0.469.0",
+    "next": "16.2.1",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-hook-form": "^7.53.0",
+    "sonner": "^1.5.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "electron-builder": "^25.0.5",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.1",
+    "prisma": "^6.19.2",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  },
+  "build": {
+    "appId": "com.inventory.desktop",
+    "productName": "InventoryManager",
+    "files": [
+      ".next/**/*",
+      "public/**/*",
+      "electron/main.js",
+      "package.json",
+      "prisma/schema.prisma",
+      "settings.json"
+    ],
+    "asar": true,
+    "extraResources": [
+      {
+        "from": "prisma/dev.db",
+        "to": "resources/dev.db",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "artifactName": "InventoryManager-${version}.exe"
+    }
+  }
+}

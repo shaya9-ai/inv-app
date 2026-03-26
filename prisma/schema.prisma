@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Product {
+  id           Int      @id @default(autoincrement())
+  name         String
+  category     String
+  unit         String
+  buyPrice     Float
+  sellPrice    Float
+  currentStock Int       @default(0)
+  createdAt    DateTime @default(now())
+
+  StockMovement StockMovement[]
+}
+
+model StockMovement {
+  id           Int      @id @default(autoincrement())
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId    Int
+  type         MovementType
+  quantity     Int
+  buyPrice     Float?
+  supplierName String?
+  note         String?
+  date         DateTime @default(now())
+}
+
+model Invoice {
+  id            Int      @id @default(autoincrement())
+  invoiceNumber String   @unique
+  customerName  String
+  customerPhone String?
+  items         String   // JSON stringified array of invoice items
+  subtotal      Float
+  discount      Float    @default(0)
+  discountType  DiscountType @default(AMOUNT)
+  total         Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum MovementType {
+  CHECK_IN
+  CHECK_OUT
+}
+
+enum DiscountType {
+  AMOUNT
+  PERCENT
+}
