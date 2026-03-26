@@ -2,6 +2,7 @@
   "name": "inv",
   "version": "0.1.0",
   "private": true,
+  "author": "xpertsphere",
   "main": "electron/main.js",
   "scripts": {
     "dev": "next dev",
@@ -15,7 +16,6 @@
     "@prisma/client": "^6.19.2",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
-    "electron": "^30.0.0",
     "lucide-react": "^0.469.0",
     "next": "16.2.1",
     "react": "19.2.4",
@@ -29,6 +29,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "electron": "^30.0.0",
     "electron-builder": "^25.0.5",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
