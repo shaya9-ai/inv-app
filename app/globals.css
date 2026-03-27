@@ -111,6 +111,17 @@ body {
   transform: translateX(40%) rotate(12deg);
 }
 
+@keyframes bar-rise {
+  0% { transform: scaleY(0.1); opacity: 0; }
+  60% { transform: scaleY(1.08); opacity: 1; }
+  100% { transform: scaleY(1); opacity: 1; }
+}
+
+.animate-bar-rise {
+  transform-origin: bottom;
+  animation: bar-rise 700ms ease-out forwards;
+}
+
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
