@@ -85,8 +85,8 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
     const receiptMode = window.confirm("Use 80mm receipt mode? Cancel = A4");
     const pageCss = receiptMode
       ? `
-        @page { size: 80mm auto; margin: 4mm; }
-        body { width: 72mm !important; margin: 0 auto !important; }
+        @page { size: 80mm auto; margin: 2mm 4mm; }
+        body { width: 72mm !important; margin: 0 !important; font-size: 12px !important; }
       `
       : `
         @page { size: A4 portrait; margin: 12mm; }

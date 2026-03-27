@@ -68,13 +68,7 @@
         letter-spacing: 0.06em;
         color: #fef9e7;
       }
-      .sub {
-        margin: 0;
-        color: #cfd2dd;
-        letter-spacing: 0.22em;
-        font-size: 11px;
-        text-transform: uppercase;
-      }
+      .sub { margin: 0; color: #cfd2dd; letter-spacing: 0.22em; font-size: 11px; text-transform: uppercase; }
       .progress {
         margin: 18px auto 6px;
         width: 80%;
@@ -102,6 +96,8 @@
         font-size: 11px;
         letter-spacing: 0.08em;
       }
+      .status { margin-top: 10px; color: #e4e6f0; font-size: 13px; letter-spacing: 0.02em; }
+      .hint { margin: 2px 0 0; color: #9aa0b5; font-size: 12px; }
     </style>
   </head>
   <body>
@@ -112,7 +108,15 @@
       <h1>INVENTORY MANAGEMENT</h1>
       <p class="sub">Launching workspace</p>
       <div class="progress"></div>
+      <div id="status" class="status">Activation needed: please select your license file</div>
+      <div class="hint">If you see a picker, choose the .lic file from your vendor.</div>
       <p class="foot">Please wait…</p>
     </div>
+    <script>
+      window.setStatus = (msg) => {
+        const el = document.getElementById("status");
+        if (el) el.textContent = msg;
+      };
+    </script>
   </body>
 </html>

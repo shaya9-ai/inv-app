@@ -51,6 +51,7 @@
       "public/**/*",
       "electron/main.js",
       "electron/sync-prisma-alias.js",
+      "license/public.pem",
       "package.json",
       "prisma/schema.prisma",
       "settings.json"
@@ -80,5 +81,6 @@
       "artifactName": "InventoryManager-${version}.exe",
       "icon": "app/favicon.ico"
     }
-  }
+  },
+  "description": "Inventory Manager desktop app with licensing"
 }

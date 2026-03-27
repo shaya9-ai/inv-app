@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Boxes, Home, Package2, Receipt, Settings, ShoppingCart, Waypoints } from "lucide-react";
 import { useCart } from "./cart-provider";
 import clsx from "clsx";
+import { useEffect, useState } from "react";
 
 const nav = [
   { href: "/", label: "Dashboard", icon: Home },
@@ -20,6 +21,18 @@ const nav = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { state } = useCart();
+  const [license, setLicense] = useState<{ daysLeft?: number; valid?: boolean; error?: string } | null>(null);
+
+  useEffect(() => {
+    // Detect Electron renderer by userAgent (nodeIntegration is off, so process may be undefined)
+    const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+    const isElectron = ua.includes("Electron");
+    if (!isElectron) return;
+    fetch("/api/license-status")
+      .then((r) => r.json())
+      .then((data) => setLicense(data))
+      .catch(() => setLicense(null));
+  }, []);
 
   return (
     <aside className="w-64 min-h-screen sticky top-0 px-4 py-6 border-r border-[var(--border)] bg-[#0d0d15]/90 hidden md:flex flex-col gap-6 backdrop-blur-xl shadow-glow">
@@ -56,9 +69,27 @@ export default function Sidebar() {
           );
         })}
       </nav>
-      <div className="mt-auto text-xs text-gray-500 flex items-center gap-2">
-        <ShoppingCart size={14} />
-        <span>{state.items.length} items in cart</span>
+      <div className="mt-auto space-y-1 text-xs">
+        <div className="flex items-center gap-2 text-gray-400">
+          <ShoppingCart size={14} />
+          <span>{state.items.length} items in cart</span>
+        </div>
+        {license && (
+          <div
+            className={clsx(
+              "px-2 py-1 rounded-md border text-[11px]",
+              license.valid === false
+                ? "border-red-500 text-red-400"
+                : "border-[var(--border)] text-gray-300"
+            )}
+          >
+            {license.valid === false
+              ? "License: invalid/expired"
+              : license.daysLeft !== undefined
+              ? `License: ${license.daysLeft} day${license.daysLeft === 1 ? "" : "s"} left`
+              : "License: activated"}
+          </div>
+        )}
       </div>
     </aside>
   );

@@ -1,9 +1,11 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, ipcMain } = require("electron");
+const { dialog } = require("electron");
 const path = require("path");
 const http = require("http");
 const fs = require("fs");
 const Module = require("module");
 const next = require("next");
+const crypto = require("crypto");
 
 const isDev = !app.isPackaged;
 const port = process.env.PORT || 8124;
@@ -52,6 +54,133 @@ function toFileUrl(filePath) {
   return `file:${resolved}`;
 }
 
+function getAppDataDir() {
+  return process.env.APP_DATA_PATH || path.join(app.getPath("appData"), "InventoryManager");
+}
+
+function readPublicKey() {
+  const pubPath = path.join(__dirname, "..", "license", "public.pem");
+  return fs.readFileSync(pubPath, "utf-8");
+}
+
+function base64url(input) {
+  return Buffer.from(input).toString("base64").replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+}
+
+function parseJwt(token) {
+  const parts = token.split(".");
+  if (parts.length !== 3) throw new Error("Malformed token");
+  const payload = JSON.parse(Buffer.from(parts[1].replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8"));
+  return { header: parts[0], payload, signature: parts[2], signingInput: parts[0] + "." + parts[1] };
+}
+
+function verifyToken(token) {
+  const { header, payload, signature, signingInput } = parseJwt(token);
+  const decodedHeader = JSON.parse(Buffer.from(header.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8"));
+  if (decodedHeader.alg !== "RS256") throw new Error("Unsupported alg");
+  const verifier = crypto.createVerify("RSA-SHA256");
+  verifier.update(signingInput);
+  verifier.end();
+  const ok = verifier.verify(readPublicKey(), Buffer.from(signature.replace(/-/g, "+").replace(/_/g, "/"), "base64"));
+  if (!ok) throw new Error("Bad signature");
+  if (!payload.expiresAt) throw new Error("Missing expiry");
+  if (Date.now() > payload.expiresAt) throw new Error("License expired");
+  return payload;
+}
+
+function loadLicenseFromDisk() {
+  const target = path.join(getAppDataDir(), "license.json");
+  if (!fs.existsSync(target)) return null;
+  try {
+    const stored = JSON.parse(fs.readFileSync(target, "utf-8"));
+    if (stored && stored.token) return stored.token;
+  } catch {}
+  return null;
+}
+
+function saveLicense(token) {
+  const dir = getAppDataDir();
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, "license.json"), JSON.stringify({ token }, null, 2));
+}
+
+async function ensureLicense(splash) {
+  const setStatus = (msg) => {
+    if (!splash || splash.isDestroyed()) return;
+    splash.webContents.executeJavaScript(`window.setStatus && window.setStatus(${JSON.stringify(msg)})`).catch(() => {});
+  };
+
+  const tryToken = (token) => {
+    const payload = verifyToken(token);
+    return payload;
+  };
+
+  // try existing token
+  const existing = loadLicenseFromDisk();
+  if (existing) {
+    try {
+      setStatus("Validating saved license...");
+      return tryToken(existing);
+    } catch (e) {
+      console.warn("Stored license invalid:", e.message);
+    }
+  }
+
+  async function pickAndValidate() {
+    setStatus("Activation needed: select your license file");
+    const res = dialog.showOpenDialogSync({
+      title: "Select License File",
+      filters: [{ name: "License", extensions: ["lic", "txt", "json"] }, { name: "All Files", extensions: ["*"] }],
+      properties: ["openFile"],
+    });
+    if (!res || res.length === 0) {
+      return null;
+    }
+    const token = fs.readFileSync(res[0], "utf-8").trim();
+    setStatus("Validating license...");
+    const payload = tryToken(token);
+    saveLicense(token);
+    setStatus("License accepted. Launching...");
+    return payload;
+  }
+
+  ipcMain.handle("browse-license", async () => {
+    try {
+      const payload = await pickAndValidate();
+      return { ok: true, payload };
+    } catch (e) {
+      setStatus("License invalid, try again");
+      return { ok: false, error: e.message };
+    }
+  });
+
+  // prompt user to pick a license file (JWT text)
+  for (;;) {
+    try {
+      const payload = await pickAndValidate();
+      if (payload) return payload;
+      // user cancelled; fall through to quit
+      const exit = dialog.showMessageBoxSync({
+        type: "warning",
+        buttons: ["Browse Again", "Exit"],
+        defaultId: 0,
+        message: "License required",
+        detail: "Select a license file to continue.",
+      });
+      if (exit === 1) {
+        app.quit();
+        return null;
+      }
+    } catch (e) {
+      dialog.showMessageBoxSync({
+        type: "error",
+        message: "License invalid",
+        detail: e.message,
+      });
+    }
+  }
+}
+
 async function prepareRuntimeFiles() {
   const userDataPath = app.getPath("userData");
   await fs.promises.mkdir(userDataPath, { recursive: true });
@@ -70,11 +199,6 @@ async function prepareRuntimeFiles() {
 }
 
 async function createWindow() {
-  await prepareRuntimeFiles();
-  const nextApp = next({ dev: isDev, dir: path.join(__dirname, "..") });
-  const handle = nextApp.getRequestHandler();
-  await nextApp.prepare();
-
   // Simple splash screen while Next/Electron get ready
   const splash = new BrowserWindow({
     width: 420,
@@ -84,9 +208,18 @@ async function createWindow() {
     alwaysOnTop: true,
     resizable: false,
     show: true,
+    webPreferences: { nodeIntegration: true, contextIsolation: false },
   });
   splash.loadFile(path.join(__dirname, "..", "public", "splash.html")).catch(() => {});
   splash.on("unresponsive", () => splash.destroy());
+
+  const license = await ensureLicense(splash);
+  if (!license) return;
+
+  await prepareRuntimeFiles();
+  const nextApp = next({ dev: isDev, dir: path.join(__dirname, "..") });
+  const handle = nextApp.getRequestHandler();
+  await nextApp.prepare();
 
   server = http.createServer(async (req, res) => {
     try {
