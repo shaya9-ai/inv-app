@@ -266,7 +266,7 @@ export default function CheckinGrid({ products }: Props) {
           <div className="mt-4 p-3 rounded-lg border border-[var(--border)] bg-[#13131c]">
             <div className="flex items-center justify-between text-sm">
               <p className="font-semibold">#{receipt.receiptNumber}</p>
-              <button className="text-xs text-[var(--accent)]" onClick={() => openPrint(receipt)}>
+              <button className="text-xs text-[var(--accent)]" onClick={() => openGrnPrint(receipt)}>
                 Print again
               </button>
             </div>

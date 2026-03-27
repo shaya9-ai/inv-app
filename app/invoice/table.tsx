@@ -10,6 +10,9 @@ import { calculateTotal } from "../../lib/cartMath";
 import scanmeImage from "../../public/scanme.png";
 import logoImage from "../../public/logo.png";
 
+const LOGO_VECTOR_SRC = "/logo.ai";
+const LOGO_FALLBACK_SRC = logoImage.src;
+
 type InvoiceItem = {
   productId: number;
   name: string;
@@ -150,7 +153,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
         </head>
         <body>
           <div class="header">
-            <img src="${logoImage.src}" alt="Logo" style="width: 120px; height: auto; margin: 0 auto 4pt; display: block;" />
+            <img src="${LOGO_VECTOR_SRC}" onerror="this.onerror=null;this.src='${LOGO_FALLBACK_SRC}'" alt="Logo" style="width: 140px; height: auto; margin: 0 auto 4pt; display: block; image-rendering: optimizeQuality;" />
             <div class="company">S•PRINT TECH MOBILE</div>
             <div class="company">ACCESSORIES</div>
             <div class="invoice-num">#${inv.invoiceNumber}</div>

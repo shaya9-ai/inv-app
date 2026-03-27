@@ -5,6 +5,9 @@ import { calculateTotal } from "./cartMath";
 import scanmeImage from "../public/scanme.png";
 import logoImage from "../public/logo.png";
 
+const LOGO_VECTOR_SRC = "/logo.ai";
+const LOGO_FALLBACK_SRC = logoImage.src;
+
 interface InvoiceData {
   invoiceNumber: string;
   customerName: string;
@@ -93,15 +96,15 @@ export function openInvoicePrint(inv: InvoiceData) {
             ${pageCss}
           }
         </style>
-      </head>
-      <body>
-        <div class="header">
-          <img src="${logoImage.src}" alt="Logo" style="width: 120px; height: auto; margin: 0 auto 4pt; display: block;" />
-          <div class="company">S•PRINT TECH MOBILE</div>
-          <div class="company">ACCESSORIES</div>
-          <div class="invoice-num">#${inv.invoiceNumber}</div>
-          <div class="date">${format(inv.createdAt, "dd MMM yyyy, HH:mm")}</div>
-          ${inv.customerName ? `<div class="customer"><strong>${inv.customerName}</strong></div>` : ""}
+        </head>
+        <body>
+          <div class="header">
+            <img src="${LOGO_VECTOR_SRC}" onerror="this.onerror=null;this.src='${LOGO_FALLBACK_SRC}'" alt="Logo" style="width: 140px; height: auto; margin: 0 auto 4pt; display: block; image-rendering: optimizeQuality;" />
+            <div class="company">S•PRINT TECH MOBILE</div>
+            <div class="company">ACCESSORIES</div>
+            <div class="invoice-num">#${inv.invoiceNumber}</div>
+            <div class="date">${format(inv.createdAt, "dd MMM yyyy, HH:mm")}</div>
+            ${inv.customerName ? `<div class="customer"><strong>${inv.customerName}</strong></div>` : ""}
           ${inv.customerPhone ? `<div class="customer">Ph: ${inv.customerPhone}</div>` : ""}
         </div>
         <table>
@@ -218,7 +221,7 @@ export function openGrnPrint(rec: ReceiptData) {
       </head>
       <body>
         <div class="header">
-          <img src="${logoImage.src}" alt="Logo" style="width: 120px; height: auto; margin: 0 auto 4pt; display: block;" />
+          <img src="${LOGO_VECTOR_SRC}" onerror="this.onerror=null;this.src='${LOGO_FALLBACK_SRC}'" alt="Logo" style="width: 140px; height: auto; margin: 0 auto 4pt; display: block; image-rendering: optimizeQuality;" />
           <div class="company">S•PRINT TECH MOBILE</div>
           <div class="company">ACCESSORIES</div>
           <div class="invoice-title">GOODS RECEIPT NOTE (GRN)</div>
