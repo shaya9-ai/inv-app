@@ -2,59 +2,30 @@
 
 import { Product, StockMovement } from "@prisma/client";
 import { format } from "date-fns";
+import { openGrnPrint } from "../../lib/printInvoice";
 
 type MovementWithProduct = StockMovement & { product: Product };
 
 export default function ReceiptsTable({ movements }: { movements: MovementWithProduct[] }) {
   const printOne = (m: MovementWithProduct) => {
-    const win = window.open("", "_blank", "width=800,height=900");
-    if (!win) return;
-    const total = (m.buyPrice ?? 0) * m.quantity;
-    win.document.write(`
-      <html>
-        <head>
-          <title>Receipt #GRN-${m.id}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 24px; color: #000; }
-            table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-            td, th { border: 1px solid #000; padding: 6px; font-size: 12px; }
-            h1 { margin: 0; }
-            @media print { body { -webkit-print-color-adjust: exact; } }
-          </style>
-        </head>
-        <body>
-          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <div>
-              <h1>Receipt / GRN</h1>
-              <p>Supplier: ${m.supplierName ?? "-"}</p>
-            </div>
-            <div style="text-align:right">
-              <p>#GRN-${m.id}</p>
-              <p>${format(m.date, "PPpp")}</p>
-            </div>
-          </div>
-          <table>
-            <thead>
-              <tr><th>Sr#</th><th>Product</th><th>Qty</th><th>Unit</th><th>Unit Price</th><th>Total</th></tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>1</td>
-                <td>${m.product.name}</td>
-                <td>${m.quantity}</td>
-                <td>${m.product.unit ?? ""}</td>
-                <td>Rs ${m.buyPrice ?? 0}</td>
-                <td>Rs ${total.toFixed(2)}</td>
-              </tr>
-            </tbody>
-          </table>
-          <p style="text-align:right; margin-top:12px; font-weight:bold;">Grand Total: Rs ${total.toFixed(2)}</p>
-          <p style="margin-top:18px;">Thank you.</p>
-        </body>
-      </html>
-    `);
-    win.document.close();
-    win.print();
+    openGrnPrint({
+      receiptNumber: `GRN-${m.id}`,
+      supplierName: m.supplierName ?? undefined,
+      date: format(m.date, "yyyy-MM-dd HH:mm:ss"),
+      items: [
+        {
+          name: m.product.name,
+          unit: m.product.unit ?? undefined,
+          quantity: m.quantity,
+          price: m.buyPrice ?? 0,
+        },
+      ],
+      subtotal: (m.buyPrice ?? 0) * m.quantity,
+      discount: 0,
+      discountType: "AMOUNT",
+      total: (m.buyPrice ?? 0) * m.quantity,
+      note: m.note ?? undefined,
+    });
   };
 
   return (

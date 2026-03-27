@@ -4,6 +4,7 @@ import { Product } from "@prisma/client";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { calculateTotal } from "../../lib/cartMath";
+import { openGrnPrint } from "../../lib/printInvoice";
 import { PlusCircle, Trash2, Printer } from "lucide-react";
 import clsx from "clsx";
 
@@ -80,58 +81,8 @@ export default function CheckinGrid({ products }: Props) {
     const data = await res.json();
     setReceipt(data.receipt);
     toast.success("Stock updated");
-    if (print) openPrint(data.receipt);
+    if (print) openGrnPrint(data.receipt);
     setItems([]);
-  };
-
-  const openPrint = (rec: any) => {
-    const win = window.open("", "_blank", "width=900,height=900");
-    if (!win) return;
-    win.document.write(`
-      <html>
-        <head>
-          <title>Receipt #${rec.receiptNumber}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 24px; color: #000; }
-            table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-            td, th { border: 1px solid #000; padding: 6px; font-size: 12px; }
-            h1 { margin: 0; }
-            @media print { body { -webkit-print-color-adjust: exact; } }
-          </style>
-        </head>
-        <body>
-          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <div>
-              <h1>Receipt / GRN</h1>
-              <p>Supplier: ${rec.supplierName ?? "-"}</p>
-            </div>
-            <div style="text-align:right">
-              <p>#${rec.receiptNumber}</p>
-              <p>${rec.date}</p>
-            </div>
-          </div>
-          <table>
-            <thead>
-              <tr><th>Sr#</th><th>Product</th><th>Qty</th><th>Unit</th><th>Unit Price</th><th>Total</th></tr>
-            </thead>
-            <tbody>
-              ${rec.items
-                .map(
-                  (it: any, idx: number) =>
-                    `<tr><td>${idx + 1}</td><td>${it.name}</td><td>${it.quantity}</td><td>${it.unit ?? ""}</td><td>Rs ${it.price}</td><td>Rs ${(it.price * it.quantity).toFixed(2)}</td></tr>`
-                )
-                .join("")}
-            </tbody>
-          </table>
-          <p style="text-align:right; margin-top:12px;">Subtotal: Rs ${rec.subtotal}</p>
-          <p style="text-align:right;">Discount: Rs ${rec.discount} ${rec.discountType}</p>
-          <p style="text-align:right; margin-top:12px; font-weight:bold;">Grand Total: Rs ${rec.total}</p>
-          <p style="margin-top:18px;">Thank you.</p>
-        </body>
-      </html>
-    `);
-    win.document.close();
-    win.print();
   };
 
   return (
