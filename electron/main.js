@@ -6,7 +6,7 @@ const Module = require("module");
 const next = require("next");
 
 const isDev = !app.isPackaged;
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8124;
 let server;
 
 const originalResolveFilename = Module._resolveFilename;
@@ -47,7 +47,9 @@ Module._resolveFilename = function patchedResolve(request, parent, isMain, optio
 };
 
 function toFileUrl(filePath) {
-  return `file:${filePath.replace(/\\/g, "/")}`;
+  // Convert a path to the SQLite-friendly URI format Prisma expects on Windows
+  const resolved = path.resolve(filePath).replace(/\\/g, "/");
+  return `file:${resolved}`;
 }
 
 async function prepareRuntimeFiles() {

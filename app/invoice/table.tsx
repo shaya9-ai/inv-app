@@ -25,6 +25,7 @@ function parseInvoice(inv: Invoice): InvoiceWithItems {
 
 export default function InvoiceList({ invoices, products }: { invoices: Invoice[]; products: Product[] }) {
   const parsed = useMemo(() => invoices.map(parseInvoice), [invoices]);
+  const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<InvoiceWithItems | null>(null);
   const [items, setItems] = useState<InvoiceItem[]>([]);
   const [customer, setCustomer] = useState({ name: "", phone: "" });
@@ -83,8 +84,14 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
   const print = (inv: InvoiceWithItems) => {
     const receiptMode = window.confirm("Use 80mm receipt mode? Cancel = A4");
     const pageCss = receiptMode
-      ? "@page { size: 80mm auto; margin: 4mm; } body { width: 76mm; }"
-      : "@page { size: A4; margin: 12mm; }";
+      ? `
+        @page { size: 80mm auto; margin: 4mm; }
+        body { width: 72mm !important; margin: 0 auto !important; }
+      `
+      : `
+        @page { size: A4 portrait; margin: 12mm; }
+        body { max-width: 190mm; margin: 0 auto; }
+      `;
     const numbers = calculateTotal({
       items: inv.parsedItems as any,
       discount: inv.discount,
@@ -99,11 +106,14 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
         <head>
           <title>Invoice #${inv.invoiceNumber}</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 24px; color: #000; }
+            body { font-family: Arial, sans-serif; padding: 16px; color: #000; }
             table { width: 100%; border-collapse: collapse; margin-top: 12px; }
             td, th { border: 1px solid #000; padding: 6px; font-size: 12px; }
             h1 { margin: 0; }
-            @media print { body { -webkit-print-color-adjust: exact; } ${pageCss} }
+            @media print {
+              html, body { -webkit-print-color-adjust: exact; }
+              ${pageCss}
+            }
           </style>
         </head>
         <body>
@@ -139,6 +149,15 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
             <p style="margin:0;">Luckyone Mall first floor opp.ideas by</p>
             <p style="margin:0 0 4px 0;">gul ahmed</p>
             <p style="margin:0;">Contact no: 03012276178</p>
+            <div style="margin-top:12px; font-size:11px; line-height:1.5;">
+              <strong>Terms &amp; Conditions</strong>
+              <ul style="margin:6px 0 0 14px; padding:0;">
+                <li>Goods once sold are returnable/exchangeable within 7 days with receipt and original packaging.</li>
+                <li>Warranty claims (if applicable) require manufacturer terms and intact warranty seals.</li>
+                <li>Physical/accidental damage and moisture are not covered under warranty.</li>
+                <li>Prices include applicable taxes. Please check items before leaving the counter.</li>
+              </ul>
+            </div>
           </div>
         </body>
       </html>
@@ -147,8 +166,40 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
     win.print();
   };
 
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return parsed;
+    return parsed.filter((inv) => {
+      const haystack = [
+        inv.invoiceNumber,
+        inv.customerName,
+        inv.customerPhone ?? "",
+        ...inv.parsedItems.map((it) => it.name),
+      ]
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [parsed, search]);
+
   return (
     <div className="card p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <div className="flex-1 min-w-[240px]">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search invoice #, customer, phone, or product..."
+            className="input w-full"
+            aria-label="Search invoices"
+          />
+        </div>
+        {search && (
+          <span className="text-xs text-gray-400">
+            Showing {filtered.length}/{parsed.length} result{filtered.length === 1 ? "" : "s"}
+          </span>
+        )}
+      </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="text-left text-gray-400">
@@ -161,10 +212,13 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
             </tr>
           </thead>
           <tbody>
-            {parsed.map((inv) => (
+            {filtered.map((inv) => (
               <tr key={inv.id} className="border-b border-[var(--border)]">
                 <td className="py-2 font-semibold">#{inv.invoiceNumber}</td>
-                <td>{inv.customerName}</td>
+                <td className="leading-tight">
+                  <div>{inv.customerName}</div>
+                  {inv.customerPhone && <div className="text-xs text-gray-400">{inv.customerPhone}</div>}
+                </td>
                 <td className="text-[var(--accent)]">Rs {inv.total.toFixed(2)}</td>
                 <td>{format(inv.createdAt, "PP")}</td>
                 <td className="flex gap-2 py-2">
