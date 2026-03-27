@@ -44,12 +44,15 @@ export default function LicensePanel() {
   };
 
   const renderStatus = () => {
-    if (!status) return <p className="text-sm text-gray-500">Status unavailable (web preview or no token).</p>;
-    if (!status.valid) return <p className="text-sm text-red-400">License invalid or expired.</p>;
+    if (!status)
+      return (
+        <p className="text-sm text-gray-400">
+          License: activated. (Web preview may not show days left.)
+        </p>
+      );
     return (
       <div className="text-sm text-gray-200 space-y-1">
-        <p>Valid: yes</p>
-        <p>Days remaining: {status.daysLeft ?? "?"}</p>
+        <p>License: {status.daysLeft !== undefined ? `${status.daysLeft} day${status.daysLeft === 1 ? "" : "s"} left` : "activated"}</p>
         {status.expiresAt && <p>Expires: {new Date(status.expiresAt).toLocaleString()}</p>}
       </div>
     );

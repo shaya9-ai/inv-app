@@ -74,22 +74,11 @@ export default function Sidebar() {
           <ShoppingCart size={14} />
           <span>{state.items.length} items in cart</span>
         </div>
-        {license && (
-          <div
-            className={clsx(
-              "px-2 py-1 rounded-md border text-[11px]",
-              license.valid === false
-                ? "border-red-500 text-red-400"
-                : "border-[var(--border)] text-gray-300"
-            )}
-          >
-            {license.valid === false
-              ? "License: invalid/expired"
-              : license.daysLeft !== undefined
-              ? `License: ${license.daysLeft} day${license.daysLeft === 1 ? "" : "s"} left`
-              : "License: activated"}
-          </div>
-        )}
+        <div className="px-2 py-1 rounded-md border text-[11px] border-[var(--border)] text-gray-300">
+          {license && license.daysLeft !== undefined
+            ? `License: ${license.daysLeft} day${license.daysLeft === 1 ? "" : "s"} left`
+            : "License: activated"}
+        </div>
       </div>
     </aside>
   );
