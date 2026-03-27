@@ -58,6 +58,18 @@ export default async function Home() {
 
   return (
     <AppShell title="Dashboard">
+      <div className="card mb-6 p-5 md:p-6 flex flex-col md:flex-row md:items-center md:justify-between shine animate-fade-in">
+        <div>
+          <p className="text-xs uppercase tracking-[0.32em] text-gray-400">Inventory Management</p>
+          <h2 className="text-2xl md:text-3xl font-bold mt-1 leading-tight">Welcome back</h2>
+          <p className="text-sm text-gray-400">by VNE DIGITAL</p>
+        </div>
+        <div className="flex gap-3 mt-4 md:mt-0">
+          <a href="/invoice/new" className="btn btn-primary text-sm px-4 py-2">New Invoice</a>
+          <a href="/inventory" className="btn text-sm px-4 py-2 border border-[var(--border)]">View Inventory</a>
+        </div>
+      </div>
+
       <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <StatCard label="Products" value={products.length.toString()} sub="Active SKUs" />
         <StatCard

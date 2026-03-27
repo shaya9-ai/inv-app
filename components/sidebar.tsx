@@ -28,7 +28,7 @@ export default function Sidebar() {
           S
         </div>
         <div>
-          <p>Inventory</p>
+          <p>S.PRINT SOFTWARE</p>
           <p className="text-xs text-gray-400">by VNE Digital</p>
         </div>
       </div>

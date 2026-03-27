@@ -75,6 +75,19 @@ async function createWindow() {
   const handle = nextApp.getRequestHandler();
   await nextApp.prepare();
 
+  // Simple splash screen while Next/Electron get ready
+  const splash = new BrowserWindow({
+    width: 420,
+    height: 260,
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    resizable: false,
+    show: true,
+  });
+  splash.loadFile(path.join(__dirname, "..", "public", "splash.html")).catch(() => {});
+  splash.on("unresponsive", () => splash.destroy());
+
   server = http.createServer(async (req, res) => {
     try {
       await handle(req, res);
@@ -94,6 +107,8 @@ async function createWindow() {
   const win = new BrowserWindow({
     width: 1400,
     height: 900,
+    show: false,
+    icon: path.join(__dirname, "..", "app", "favicon.ico"),
     webPreferences: { nodeIntegration: false },
     backgroundColor: "#0b0b10",
     // Use default OS frame so minimize/restore/close buttons remain visible
@@ -101,6 +116,18 @@ async function createWindow() {
   });
 
   await win.loadURL(`http://localhost:${port}`);
+
+  // Show main window as soon as it's ready; hard fallback after 8s in case build is slow
+  win.once("ready-to-show", () => {
+    splash?.destroy();
+    win.show();
+  });
+  setTimeout(() => {
+    if (!win.isVisible()) {
+      splash?.destroy();
+      win.show();
+    }
+  }, 8000);
 }
 
 app.whenReady().then(createWindow);

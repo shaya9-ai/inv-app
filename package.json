@@ -42,6 +42,7 @@
   "build": {
     "appId": "com.inventory.desktop",
     "productName": "InventoryManager",
+    "icon": "app/favicon.ico",
     "files": [
       ".next/**/*",
       "node_modules/@prisma/client/**/*",
@@ -76,7 +77,8 @@
     ],
     "win": {
       "target": "nsis",
-      "artifactName": "InventoryManager-${version}.exe"
+      "artifactName": "InventoryManager-${version}.exe",
+      "icon": "app/favicon.ico"
     }
   }
 }
