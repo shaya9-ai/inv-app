@@ -4,11 +4,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-<<<<<<< HEAD
   url      = env("DATABASE_URL")
-=======
-  url      = "file:./dev.db"
->>>>>>> b7c7ea63851aefeb00e32bf037964ec6794c2e19
 }
 
 model Product {
