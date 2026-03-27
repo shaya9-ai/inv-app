@@ -144,7 +144,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
             .terms { font-size: 7pt; margin-top: 2pt; line-height: 1.08; text-align: left; }
             .terms strong { font-weight: bold; }
             .terms ul { margin: 1pt 0 0 0; padding: 0; list-style-type: none;  }
-            .terms li { margin: 0.5pt 0; padding-left: 6pt; position: relative; font-size: 10pt; }
+            .terms li { margin: 0.5pt 0; padding-left: 6pt; position: relative; font-size: 8pt; }
             .terms li:before { content: "•"; position: absolute; left: 0; }
             @media print {
               ${pageCss}
@@ -164,17 +164,19 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
           <table>
             <thead>
               <tr>
+                <th style="width:10%; text-align: center;">S.No</th>
                 <th style="width:15%; text-align: center;">Qty</th>
-                <th style="width:50%; text-align: left;">Product</th>
-                <th style="width:17%; text-align: right;">Price</th>
-                <th style="width:18%; text-align: right;">Total</th>
+                <th style="width:45%; text-align: left;">Product</th>
+                <th style="width:15%; text-align: right;">Price</th>
+                <th style="width:15%; text-align: right;">Total</th>
               </tr>
             </thead>
             <tbody>
               ${inv.parsedItems
                 .map(
-                  (it) =>
+                  (it, idx) =>
                     `<tr>
+                      <td style="text-align: center;">${idx + 1}</td>
                       <td style="text-align: center;">${it.quantity}x</td>
                       <td>${it.name}${it.unit ? ` (${it.unit})` : ""}</td>
                       <td style="text-align: right;">Rs${it.price}</td>
