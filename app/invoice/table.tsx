@@ -193,8 +193,8 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
             <p>Thank you for business!</p>
             <p>Luckyone Mall, Karachi</p>
             <p>Ph: 03012276178</p>
-            <h6>We love to hear your feedback!</h6>
-            <h6>Scan the QR Code to write a review</h6>
+            <h4>We love to hear your feedback!</h4>
+            <h4>Scan the QR Code to write a review</h4>
             <img src="${scanmeImage.src}" alt="QR Code" style="width: 150px; height: auto; margin: 8pt auto; border: none; padding: 0;" />
             <div class="terms">
               <strong>Terms & Conditions:</strong>
