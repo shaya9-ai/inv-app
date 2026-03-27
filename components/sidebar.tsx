@@ -25,11 +25,19 @@ export default function Sidebar() {
     <aside className="w-64 min-h-screen sticky top-0 px-4 py-6 border-r border-[var(--border)] bg-[#0d0d15]/90 hidden md:flex flex-col gap-6 backdrop-blur-xl shadow-glow">
       <div className="flex items-center gap-3 font-bold text-lg tracking-tight animate-scale-in">
         <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[#f59e0b] text-black flex items-center justify-center font-black shadow-glow">
+<<<<<<< HEAD
+          S
+        </div>
+        <div>
+          <p>Inventory</p>
+          <p className="text-xs text-gray-400">by VNE Digital</p>
+=======
           IM
         </div>
         <div>
           <p>Inventory</p>
           <p className="text-xs text-gray-400">Offline Desktop</p>
+>>>>>>> b7c7ea63851aefeb00e32bf037964ec6794c2e19
         </div>
       </div>
       <nav className="flex flex-col gap-1">
