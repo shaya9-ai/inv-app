@@ -143,8 +143,8 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
             .footer img { margin: 4pt auto; display: block; border: none; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .terms { font-size: 7pt; margin-top: 2pt; line-height: 1.08; text-align: left; }
             .terms strong { font-weight: bold; }
-            .terms ul { margin: 1pt 0 0 0; padding: 0; list-style-type: none; }
-            .terms li { margin: 0.5pt 0; padding-left: 6pt; position: relative; }
+            .terms ul { margin: 1pt 0 0 0; padding: 0; list-style-type: none;  }
+            .terms li { margin: 0.5pt 0; padding-left: 6pt; position: relative; font-size: 10pt; }
             .terms li:before { content: "•"; position: absolute; left: 0; }
             @media print {
               ${pageCss}
@@ -193,8 +193,8 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
             <p>Thank you for business!</p>
             <p>Luckyone Mall, Karachi</p>
             <p>Ph: 03012276178</p>
-            <h4>We love to hear your feedback!</h4>
-            <h4>Scan the QR Code to write a review</h4>
+            <h3 class="text-lg font-bold" style="margin: 6pt 0 0;">We love to hear your feedback!</h3>
+            <h2 class="text-lg font-bold mt-8">Scan the QR Code to write a review</h2>
             <img src="${scanmeImage.src}" alt="QR Code" style="width: 150px; height: auto; margin: 8pt auto; border: none; padding: 0;" />
             <div class="terms">
               <strong>Terms & Conditions:</strong>
