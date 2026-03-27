@@ -94,7 +94,8 @@ async function createWindow() {
     height: 900,
     webPreferences: { nodeIntegration: false },
     backgroundColor: "#0b0b10",
-    titleBarStyle: "hidden",
+    // Use default OS frame so minimize/restore/close buttons remain visible
+    frame: true,
   });
 
   await win.loadURL(`http://localhost:${port}`);
