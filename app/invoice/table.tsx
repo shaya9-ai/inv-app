@@ -4,10 +4,10 @@ import { Invoice, Product } from "@prisma/client";
 import { useEffect, useMemo, useState } from "react";
 import { format, startOfDay, endOfDay, subDays, isWithinInterval, startOfMonth, endOfMonth } from "date-fns";
 import { toast } from "sonner";
-import { Loader2, Edit, Printer, Trash2, Plus, Save, Calendar, ChevronDown, X, Download, FileSpreadsheet } from "lucide-react";
+import { Loader2, Edit, Printer, Trash2, Plus, Save, Calendar, ChevronDown, X, FileSpreadsheet } from "lucide-react";
 import { CartItem } from "../../lib/types";
 import { calculateTotal } from "../../lib/cartMath";
-import { exportToExcel, exportToCSV } from "../../lib/exportInvoices";
+import { exportToExcel } from "../../lib/exportInvoices";
 import scanmeImage from "../../public/scanme.png";
 import logoImage from "../../public/logo.png";
 
@@ -360,8 +360,136 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
     }, 0);
   };
 
+  const calculateCost = (inv: InvoiceWithItems) => {
+    return inv.parsedItems.reduce((sum, item) => {
+      const buyPrice = item.buyPrice ?? 0;
+      return sum + buyPrice * item.quantity;
+    }, 0);
+  };
+
+  const printAllInvoices = () => {
+    const grandTotalCost = filtered.reduce((sum, inv) => sum + calculateCost(inv), 0);
+    const grandTotalSale = filtered.reduce((sum, inv) => sum + inv.total, 0);
+    const grandTotalProfit = filtered.reduce((sum, inv) => sum + calculateProfit(inv), 0);
+
+    let globalSNo = 0;
+    const allProductRows = filtered.flatMap((inv) =>
+      inv.parsedItems.map((item) => {
+        globalSNo++;
+        const itemCost = (item.buyPrice ?? 0) * item.quantity;
+        const itemSale = item.price * item.quantity;
+        return `
+          <tr>
+            <td class="sno">${globalSNo}</td>
+            <td class="prod-name">${item.name}${item.unit ? ` (${item.unit})` : ""}</td>
+            <td class="qty">${item.quantity}</td>
+            <td class="cost">Rs ${itemCost.toLocaleString("en-PK")}</td>
+            <td class="sale">Rs ${itemSale.toLocaleString("en-PK")}</td>
+          </tr>
+        `;
+      })
+    ).join('');
+
+    const content = `
+      <div class="receipt">
+        <div class="header">
+          <div class="company">S•PRINT TECH MOBILE</div>
+          <div class="company">ACCESSORIES</div>
+          <div class="report-title">SALES REPORT</div>
+          <div class="report-info">${getFilterLabel()} — ${filtered.length} Invoices</div>
+          <div class="report-info">${format(new Date(), "dd MMM yyyy, HH:mm")}</div>
+          <div class="report-info">${globalSNo} Products Sold</div>
+        </div>
+        <div class="divider"></div>
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th class="sno-col">S#</th>
+              <th class="prod-col">Product</th>
+              <th class="qty-col">Qty</th>
+              <th class="cost-col">Cost</th>
+              <th class="sale-col">Sale</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${allProductRows}
+          </tbody>
+        </table>
+        <div class="divider"></div>
+        <div class="grand-total-box">
+          <div class="grand-label">SUMMARY</div>
+          <div class="grand-row">
+            <span>Total Cost:</span>
+            <span>Rs ${grandTotalCost.toLocaleString("en-PK")}</span>
+          </div>
+          <div class="grand-row">
+            <span>Total Sale:</span>
+            <span>Rs ${grandTotalSale.toLocaleString("en-PK")}</span>
+          </div>
+          <div class="grand-row ${grandTotalProfit >= 0 ? 'profit' : 'loss'}">
+            <span>Total Profit:</span>
+            <span>Rs ${grandTotalProfit.toLocaleString("en-PK")}</span>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="thank-you">Thank You!</div>
+          <div class="footer-text">Powered by VNE Digital — www.vnedigital.com</div>
+        </div>
+      </div>
+    `;
+
+    const receiptStyles = `
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: 'Courier New', monospace; width: 80mm; margin: 0 auto; padding: 4mm; font-size: 11px; }
+      .receipt { max-width: 80mm; margin: 0 auto; }
+      .header { text-align: center; margin-bottom: 6px; }
+      .company { font-size: 14px; font-weight: bold; }
+      .report-title { font-size: 12px; font-weight: bold; margin: 3px 0; color: #333; }
+      .report-info { font-size: 9px; color: #666; }
+      .divider { border-top: 2px solid #000; margin: 5px 0; }
+      .items-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+      .items-table th { background: #000; color: #fff; text-align: left; padding: 2px 3px; font-weight: bold; }
+      .items-table td { padding: 2px 3px; border-bottom: 1px solid #ddd; vertical-align: top; }
+      .sno-col { width: 8%; text-align: center; }
+      .prod-col { width: 44%; }
+      .qty-col { width: 8%; text-align: center; }
+      .cost-col { width: 20%; text-align: right; }
+      .sale-col { width: 20%; text-align: right; }
+      .sno { text-align: center; font-weight: bold; }
+      .prod-name { font-weight: bold; }
+      .qty { text-align: center; }
+      .cost, .sale { text-align: right; }
+      .grand-total-box { background: #000; color: #fff; padding: 6px 8px; }
+      .grand-label { font-size: 12px; font-weight: bold; text-align: center; margin-bottom: 4px; border-bottom: 1px solid #444; padding-bottom: 3px; }
+      .grand-row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 10px; }
+      .grand-row.profit span:last-child { color: #86efac; }
+      .grand-row.loss span:last-child { color: #fca5a5; }
+      .footer { text-align: center; margin-top: 6px; padding-top: 5px; border-top: 2px solid #000; }
+      .thank-you { font-size: 12px; font-weight: bold; margin-bottom: 3px; }
+      .footer-text { font-size: 8px; color: #666; }
+      @media print { @page { size: 80mm auto; margin: 0; } body { width: 80mm !important; zoom: 200%; } }
+    `;
+
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Sales Report - ${getFilterLabel()}</title>
+            <style>${receiptStyles}</style>
+          </head>
+          <body>${content}</body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
   const totalSales = filtered.reduce((sum, inv) => sum + inv.total, 0);
   const totalProfit = filtered.reduce((sum, inv) => sum + calculateProfit(inv), 0);
+  const totalCost = filtered.reduce((sum, inv) => sum + calculateCost(inv), 0);
   const profitMargin = totalSales > 0 ? (totalProfit / totalSales) * 100 : 0;
   const isProfit = totalProfit >= 0;
 
@@ -385,11 +513,16 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
 
   return (
     <div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
         <div className="card p-4 bg-gradient-to-br from-[#1a1a22] to-[#12121a] border border-[var(--accent)]/30">
           <p className="text-xs text-gray-400 uppercase tracking-wider">Total Sales</p>
           <p className="text-2xl font-bold text-[var(--accent)] mt-1">Rs {totalSales.toLocaleString("en-PK")}</p>
           <p className="text-xs text-gray-500 mt-1">{filtered.length} invoices</p>
+        </div>
+        <div className="card p-4 bg-gradient-to-br from-[#1a1a22] to-[#12121a] border border-orange-500/30">
+          <p className="text-xs text-orange-400 uppercase tracking-wider">Total Cost</p>
+          <p className="text-2xl font-bold text-orange-400 mt-1">Rs {totalCost.toLocaleString("en-PK")}</p>
+          <p className="text-xs text-gray-500 mt-1">Buy price</p>
         </div>
         <div className={`card p-4 bg-gradient-to-br from-[#1a1a22] to-[#12121a] border ${isProfit ? "border-green-500/30" : "border-red-500/30"}`}>
           <p className={`text-xs uppercase tracking-wider ${isProfit ? "text-green-400" : "text-red-400"}`}>Total Profit</p>
@@ -401,7 +534,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
           </p>
         </div>
         <div className="card p-4 bg-gradient-to-br from-[#1a1a22] to-[#12121a] border border-blue-500/30">
-          <p className="text-xs text-gray-400 uppercase tracking-wider">Avg Profit/Invoice</p>
+          <p className="text-xs text-gray-400 uppercase tracking-wider">Avg Profit</p>
           <p className={`text-2xl font-bold mt-1 ${isProfit ? "text-blue-400" : "text-red-400"}`}>
             Rs {filtered.length > 0 ? Math.round(totalProfit / filtered.length).toLocaleString("en-PK") : 0}
           </p>
@@ -472,6 +605,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
                 </button>
               </div>
             )}
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -498,17 +632,16 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
               <FileSpreadsheet size={14} /> Excel
             </button>
             <button
-              onClick={() => { exportToCSV(filtered as any); toast.success(`Exported ${filtered.length} invoices to CSV!`); }}
-              className="btn px-3 py-2 text-xs border border-[var(--border)] text-gray-400 hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all flex items-center gap-1.5"
-              title="Export to CSV"
+              onClick={() => { printAllInvoices(); toast.success(`Printing ${filtered.length} invoices!`); }}
+              className="btn px-3 py-2 text-xs border border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)] hover:text-black transition-all flex items-center gap-1.5"
+              title="Print All Invoices"
             >
-              <Download size={14} /> CSV
+              <Printer size={14} /> Print All
             </button>
           </div>
         </div>
-      </div>
 
-      {(dateFilter !== "all" || search) && (
+        {(dateFilter !== "all" || search) && (
         <div className="flex items-center justify-between mb-3 text-xs">
           <span className="text-gray-400">
             Showing <span className="text-[var(--accent)]">{filtered.length}</span> of {parsed.length} invoices
@@ -522,6 +655,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
           </button>
         </div>
       )}
+      </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -530,6 +664,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
               <th className="py-2">Invoice #</th>
               <th>Customer</th>
               <th>Products</th>
+              <th>Cost</th>
               <th>Total</th>
               <th className="text-green-400">Profit</th>
               <th>Date</th>
@@ -564,6 +699,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
                     )}
                   </div>
                 </td>
+                <td className="text-gray-400 font-semibold">Rs {formatMoney(calculateCost(inv), 0)}</td>
                 <td className="text-[var(--accent)] font-semibold">Rs {formatMoney(inv.total, 2)}</td>
                 <td className={`font-semibold ${calculateProfit(inv) >= 0 ? "text-green-400" : "text-red-400"}`}>
                   Rs {calculateProfit(inv) >= 0 ? "+" : ""}{formatMoney(calculateProfit(inv), 0)}
@@ -734,7 +870,6 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 }
