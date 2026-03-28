@@ -177,7 +177,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
                   (it, idx) =>
                     `<tr>
                       <td style="text-align: center;">${idx + 1}</td>
-                      <td style="text-align: center;">${it.quantity}x</td>
+                      <td style="text-align: center;">${it.quantity}</td>
                       <td>${it.name}${it.unit ? ` (${it.unit})` : ""}</td>
                       <td style="text-align: right;">Rs${it.price}</td>
                       <td style="text-align: right;">Rs${(it.price * it.quantity).toFixed(0)}</td>
