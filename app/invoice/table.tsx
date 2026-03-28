@@ -129,6 +129,16 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
             th { font-weight: bold; background: #000; color: #fff; }
             .header { margin-bottom: 2pt; text-align: center; border-bottom: 3pt solid #000; padding-bottom: 2pt; }
             .header svg { margin: 0 auto 2pt; }
+            .logo-img {
+              width: 140px;
+              height: auto;
+              margin: 0 auto 4pt;
+              display: block;
+              image-rendering: optimizeQuality;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+              filter: grayscale(1) contrast(1.6) brightness(0.85);
+            }
             .invoice-title { font-size: 12pt; font-weight: bold; margin: 0; }
             .company { font-size: 15pt; margin: 6pt 0; font-weight: 700; }
             .customer { font-size: 9pt; margin: 1pt 0; font-weight: 700; }
@@ -153,7 +163,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
         </head>
         <body>
           <div class="header">
-            <img src="${LOGO_VECTOR_SRC}" onerror="this.onerror=null;this.src='${LOGO_FALLBACK_SRC}'" alt="Logo" style="width: 140px; height: auto; margin: 0 auto 4pt; display: block; image-rendering: optimizeQuality;" />
+            <img src="${LOGO_VECTOR_SRC}" onerror="this.onerror=null;this.src='${LOGO_FALLBACK_SRC}'" alt="Logo" class="logo-img" />
             <div class="company">S•PRINT TECH MOBILE</div>
             <div class="company">ACCESSORIES</div>
             <div class="invoice-num">#${inv.invoiceNumber}</div>
