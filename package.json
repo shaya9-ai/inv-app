@@ -57,13 +57,21 @@
       "settings.json"
     ],
     "asarUnpack": [
-      "node_modules/.prisma/client/**/*"
+      "node_modules/.prisma/client/**/*",
+      "license/public.pem"
     ],
     "asar": true,
     "extraResources": [
       {
         "from": "prisma/dev.db",
         "to": "resources/dev.db",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "license/public.pem",
+        "to": "license/public.pem",
         "filter": [
           "**/*"
         ]

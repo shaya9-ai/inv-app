@@ -1,2 +1,2 @@
 Remove-Item "$env:APPDATA\license.json" -ErrorAction SilentlyContinue
->> Remove-Item "$env:APPDATA\InventoryManager\license.json" -ErrorAction SilentlyContinue
+Remove-Item "$env:APPDATA\InventoryManager\license.json" -ErrorAction SilentlyContinue
