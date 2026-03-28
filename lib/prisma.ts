@@ -5,10 +5,21 @@ import { pathToFileURL } from "url";
 // Ensure SQLite URL points to an absolute path (helps when Next runs from .next or packaged contexts)
 const ensureDbUrl = () => {
   const url = process.env.DATABASE_URL;
-  if (!url || url.startsWith("file:./") || url === "file:./prisma/dev.db") {
+  const isDev = process.env.NODE_ENV === "development";
+  
+  if (isDev) console.log("[prisma.ts] DATABASE_URL at startup:", url?.slice(0, 50) + "...");
+  
+  // If URL is valid file:// or file:/// format, trust it (Electron sets this)
+  if (url && (url.startsWith("file://") || url.startsWith("file:///"))) {
+    if (isDev) console.log("[prisma.ts] Using Electron-provided DATABASE_URL");
+    return; // URL is already valid, don't override
+  }
+  
+  // If URL is missing or uses relative path, convert to absolute
+  if (!url || url.startsWith("file:./")) {
     const abs = path.join(process.cwd(), "prisma", "dev.db");
-    // Use file URL to safely handle spaces
     process.env.DATABASE_URL = pathToFileURL(abs).toString();
+    if (isDev) console.log("[prisma.ts] Set DATABASE_URL to:", process.env.DATABASE_URL?.slice(0, 50) + "...");
   }
 };
 ensureDbUrl();

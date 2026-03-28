@@ -252,7 +252,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
         </body>
         <script>
           window.onload = function() {
-            setTimeout(function() { window.print(); }, 2000);
+            setTimeout(function() { window.print(); }, 1000);
           };
         </script>
       </html>

@@ -53,7 +53,7 @@
       "electron/sync-prisma-alias.js",
       "license/public.pem",
       "package.json",
-      "prisma/schema.prisma",
+      "prisma/**/*",
       "settings.json"
     ],
     "asarUnpack": [

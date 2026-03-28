@@ -55,7 +55,7 @@ Module._resolveFilename = function patchedResolve(request, parent, isMain, optio
 function toFileUrl(filePath) {
   // Convert a path to the SQLite-friendly URI format Prisma expects on Windows
   const resolved = path.resolve(filePath).replace(/\\/g, "/");
-  return `file:${resolved}`;
+  return `file:///${resolved}`;
 }
 
 function getAppDataDir() {
@@ -199,11 +199,32 @@ async function prepareRuntimeFiles() {
   const sourceDbPath = app.isPackaged ? packagedDbPath : devDbPath;
   const runtimeDbPath = path.join(userDataPath, "dev.db");
 
-  if (!fs.existsSync(runtimeDbPath) && fs.existsSync(sourceDbPath)) {
-    await fs.promises.copyFile(sourceDbPath, runtimeDbPath);
+  try {
+    console.log("[prepareRuntimeFiles] app.isPackaged:", app.isPackaged);
+    console.log("[prepareRuntimeFiles] sourceDbPath:", sourceDbPath);
+    console.log("[prepareRuntimeFiles] sourceDbPath exists:", fs.existsSync(sourceDbPath));
+    console.log("[prepareRuntimeFiles] runtimeDbPath:", runtimeDbPath);
+    console.log("[prepareRuntimeFiles] runtimeDbPath exists:", fs.existsSync(runtimeDbPath));
+    
+    // Copy database from source if runtime doesn't have it
+    if (!fs.existsSync(runtimeDbPath) && fs.existsSync(sourceDbPath)) {
+      console.log("[prepareRuntimeFiles] Copying database from", sourceDbPath, "to", runtimeDbPath);
+      await fs.promises.copyFile(sourceDbPath, runtimeDbPath);
+      const stats = await fs.promises.stat(runtimeDbPath);
+      console.log("[prepareRuntimeFiles] Database copied successfully, size:", stats.size, "bytes");
+    } else if (!fs.existsSync(runtimeDbPath)) {
+      console.warn("[prepareRuntimeFiles] Source database not found at", sourceDbPath);
+      console.warn("[prepareRuntimeFiles] Creating new database file (schema will need to be initialized)");
+      // Just create an empty file - Prisma will fail with clear error if schema doesn't exist
+      await fs.promises.writeFile(runtimeDbPath, "");
+    }
+  } catch (err) {
+    console.error("[prepareRuntimeFiles] Error preparing database:", err);
   }
 
-  process.env.DATABASE_URL = toFileUrl(runtimeDbPath);
+  const dbUrl = toFileUrl(runtimeDbPath);
+  console.log("[prepareRuntimeFiles] DATABASE_URL:", dbUrl);
+  process.env.DATABASE_URL = dbUrl;
   process.env.APP_DATA_PATH = userDataPath;
 }
 
