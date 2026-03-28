@@ -10,6 +10,9 @@ import { calculateTotal } from "../../lib/cartMath";
 import scanmeImage from "../../public/scanme.png";
 import logoImage from "../../public/logo.png";
 
+const LOGO_VECTOR_SRC = "/logo.ai";
+const LOGO_FALLBACK_SRC = logoImage.src;
+
 type InvoiceItem = {
   productId: number;
   name: string;
@@ -140,8 +143,8 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
             .footer img { margin: 4pt auto; display: block; border: none; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .terms { font-size: 7pt; margin-top: 2pt; line-height: 1.08; text-align: left; }
             .terms strong { font-weight: bold; }
-            .terms ul { margin: 1pt 0 0 0; padding: 0; list-style-type: none; }
-            .terms li { margin: 0.5pt 0; padding-left: 6pt; position: relative; }
+            .terms ul { margin: 1pt 0 0 0; padding: 0; list-style-type: none;  }
+            .terms li { margin: 0.5pt 0; padding-left: 6pt; position: relative; font-size: 8pt; }
             .terms li:before { content: "•"; position: absolute; left: 0; }
             @media print {
               ${pageCss}
@@ -150,7 +153,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
         </head>
         <body>
           <div class="header">
-            <img src="${logoImage.src}" alt="Logo" style="width: 120px; height: auto; margin: 0 auto 4pt; display: block;" />
+            <img src="${LOGO_VECTOR_SRC}" onerror="this.onerror=null;this.src='${LOGO_FALLBACK_SRC}'" alt="Logo" style="width: 140px; height: auto; margin: 0 auto 4pt; display: block; image-rendering: optimizeQuality;" />
             <div class="company">S•PRINT TECH MOBILE</div>
             <div class="company">ACCESSORIES</div>
             <div class="invoice-num">#${inv.invoiceNumber}</div>
@@ -161,17 +164,19 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
           <table>
             <thead>
               <tr>
+                <th style="width:10%; text-align: center;">S.No</th>
                 <th style="width:15%; text-align: center;">Qty</th>
-                <th style="width:50%; text-align: left;">Product</th>
-                <th style="width:17%; text-align: right;">Price</th>
-                <th style="width:18%; text-align: right;">Total</th>
+                <th style="width:45%; text-align: left;">Product</th>
+                <th style="width:15%; text-align: right;">Price</th>
+                <th style="width:15%; text-align: right;">Total</th>
               </tr>
             </thead>
             <tbody>
               ${inv.parsedItems
                 .map(
-                  (it) =>
+                  (it, idx) =>
                     `<tr>
+                      <td style="text-align: center;">${idx + 1}</td>
                       <td style="text-align: center;">${it.quantity}x</td>
                       <td>${it.name}${it.unit ? ` (${it.unit})` : ""}</td>
                       <td style="text-align: right;">Rs${it.price}</td>
@@ -190,8 +195,8 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
             <p>Thank you for business!</p>
             <p>Luckyone Mall, Karachi</p>
             <p>Ph: 03012276178</p>
-            <h6>We love to hear your feedback!</h6>
-            <h6>Scan the QR Code to write a review</h6>
+            <h3 class="text-lg font-bold" style="margin: 6pt 0 0;">We love to hear your feedback!</h3>
+            <h2 class="text-lg font-bold mt-8">Scan the QR Code to write a review</h2>
             <img src="${scanmeImage.src}" alt="QR Code" style="width: 150px; height: auto; margin: 8pt auto; border: none; padding: 0;" />
             <div class="terms">
               <strong>Terms & Conditions:</strong>
