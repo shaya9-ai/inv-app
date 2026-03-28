@@ -137,7 +137,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
               image-rendering: optimizeQuality;
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
-              filter: grayscale(1) contrast(1.6) brightness(0.85);
+              filter: grayscale(1) contrast(2.8) brightness(0.1);
             }
             .invoice-title { font-size: 12pt; font-weight: bold; margin: 0; }
             .company { font-size: 15pt; margin: 6pt 0; font-weight: 700; }
