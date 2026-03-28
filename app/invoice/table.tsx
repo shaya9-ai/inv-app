@@ -116,7 +116,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
         @page { size: A4 portrait; margin: 80mm; }
         body { max-width: 190mm; margin: 80mm; }
       `;
-    
+
     const numbers = calculateTotal({
       items: inv.parsedItems as any,
       discount: inv.discount,
@@ -124,9 +124,8 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
       customerName: inv.customerName,
       customerPhone: inv.customerPhone ?? "",
     });
-    const win = window.open("", "_blank", "width=800,height=900");
-    if (!win) return;
-    win.document.write(`
+
+    const html = `
       <html>
         <head>
           <title>Invoice #${inv.invoiceNumber}</title>
@@ -247,22 +246,26 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
           </div>
         </body>
       </html>
-    `);
+    `;
+
+    // If running inside Electron, open in the default system browser to use its print UI.
+    const shell = (window as any).require?.("electron")?.shell;
+    if (shell) {
+      const dataUrl = "data:text/html," + encodeURIComponent(html);
+      shell.openExternal(dataUrl);
+      return;
+    }
+
+    // Fallback: open a new tab/window and trigger print.
+    const win = window.open("", "_blank", "width=800,height=900");
+    if (!win) return;
+    win.document.write(html);
     win.document.close();
-    // give assets (logo/QR) time to load before invoking the print dialog
     win.onload = () => {
       setTimeout(() => {
-        try {
-          const stored = localStorage.getItem("printZoomPercent");
-          const parsed = Number(stored ?? "45");
-          const scale = !Number.isNaN(parsed) && parsed >= 40 && parsed <= 200 ? parsed : 45; // default hard-set to 45%
-          win.document.body.style.zoom = `${scale}%`;
-        } catch {
-          win.document.body.style.zoom = "45%";
-        }
         win.focus();
         win.print();
-      }, 2000);
+      }, 500);
     };
   };
 
