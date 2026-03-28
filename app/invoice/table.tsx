@@ -1,7 +1,7 @@
 "use client";
 
 import { Invoice, Product } from "@prisma/client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Loader2, Edit, Printer, Trash2, Plus, Save } from "lucide-react";
@@ -43,6 +43,25 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
     setCustomer({ name: inv.customerName, phone: inv.customerPhone ?? "" });
     setDiscount({ value: inv.discount, type: inv.discountType as any });
   };
+
+  useEffect(() => {
+    // Preload logo and QR so the print window can render them instantly
+    [LOGO_VECTOR_SRC, LOGO_FALLBACK_SRC, scanmeImage.src].forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!editing) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    document.documentElement.scrollTop = 0;
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [editing]);
 
   const addItem = (productId: number) => {
     const product = products.find((p) => p.id === productId);
@@ -129,6 +148,16 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
             th { font-weight: bold; background: #000; color: #fff; }
             .header { margin-bottom: 2pt; text-align: center; border-bottom: 3pt solid #000; padding-bottom: 2pt; }
             .header svg { margin: 0 auto 2pt; }
+            .logo-img {
+              width: 140px;
+              height: auto;
+              margin: 0 auto 4pt;
+              display: block;
+              image-rendering: optimizeQuality;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+              filter: grayscale(1) contrast(2.8) brightness(0.1);
+            }
             .invoice-title { font-size: 12pt; font-weight: bold; margin: 0; }
             .company { font-size: 15pt; margin: 6pt 0; font-weight: 700; }
             .customer { font-size: 9pt; margin: 1pt 0; font-weight: 700; }
@@ -153,7 +182,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
         </head>
         <body>
           <div class="header">
-            <img src="${LOGO_VECTOR_SRC}" onerror="this.onerror=null;this.src='${LOGO_FALLBACK_SRC}'" alt="Logo" style="width: 140px; height: auto; margin: 0 auto 4pt; display: block; image-rendering: optimizeQuality;" />
+            <img src="${LOGO_VECTOR_SRC}" onerror="this.onerror=null;this.src='${LOGO_FALLBACK_SRC}'" alt="Logo" class="logo-img" />
             <div class="company">S•PRINT TECH MOBILE</div>
             <div class="company">ACCESSORIES</div>
             <div class="invoice-num">#${inv.invoiceNumber}</div>
@@ -177,7 +206,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
                   (it, idx) =>
                     `<tr>
                       <td style="text-align: center;">${idx + 1}</td>
-                      <td style="text-align: center;">${it.quantity}x</td>
+                      <td style="text-align: center;">${it.quantity}</td>
                       <td>${it.name}${it.unit ? ` (${it.unit})` : ""}</td>
                       <td style="text-align: right;">Rs${it.price}</td>
                       <td style="text-align: right;">Rs${(it.price * it.quantity).toFixed(0)}</td>
@@ -220,7 +249,13 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
       </html>
     `);
     win.document.close();
-    win.print();
+    // give assets (logo/QR) time to load before invoking the print dialog
+    win.onload = () => {
+      setTimeout(() => {
+        win.focus();
+        win.print();
+      }, 1000);
+    };
   };
 
   const filtered = useMemo(() => {
@@ -296,7 +331,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
       </div>
 
       {editing && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center animate-fade-in">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-start justify-center p-4 md:p-8 overflow-y-auto animate-fade-in">
           <div className="card w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 shadow-glow animate-scale-in">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Edit Invoice #{editing.invoiceNumber}</h3>
