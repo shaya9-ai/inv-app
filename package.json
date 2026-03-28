@@ -64,7 +64,7 @@
     "extraResources": [
       {
         "from": "prisma/dev.db",
-        "to": "resources/dev.db",
+        "to": "dev.db",
         "filter": [
           "**/*"
         ]
@@ -78,7 +78,7 @@
       },
       {
         "from": "node_modules/.prisma/client",
-        "to": "resources/prisma-client",
+        "to": "prisma-client",
         "filter": [
           "**/*"
         ]
