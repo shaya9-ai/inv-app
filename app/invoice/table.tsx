@@ -125,6 +125,11 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
       customerPhone: inv.customerPhone ?? "",
     });
 
+    const baseUrl = window.location.origin;
+    const logoVector = `${baseUrl}${LOGO_VECTOR_SRC}`;
+    const logoFallback = `${baseUrl}${LOGO_FALLBACK_SRC}`;
+    const qrSrc = `${baseUrl}${scanmeImage.src}`;
+
     const html = `
       <html>
         <head>
@@ -181,7 +186,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
         </head>
         <body>
           <div class="header">
-            <img src="${LOGO_VECTOR_SRC}" onerror="this.onerror=null;this.src='${LOGO_FALLBACK_SRC}'" alt="Logo" class="logo-img" />
+            <img src="${logoVector}" onerror="this.onerror=null;this.src='${logoFallback}'" alt="Logo" class="logo-img" />
             <div class="company">S•PRINT TECH MOBILE</div>
             <div class="company">ACCESSORIES</div>
             <div class="invoice-num">#${inv.invoiceNumber}</div>
@@ -225,7 +230,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
             <p>Ph: 03012276178</p>
             <h3 class="text-lg font-bold" style="margin: 6pt 0 0;">We love to hear your feedback!</h3>
             <h2 class="text-lg font-bold mt-8">Scan the QR Code to write a review</h2>
-            <img src="${scanmeImage.src}" alt="QR Code" style="width: 150px; height: auto; margin: 8pt auto; border: none; padding: 0;" />
+            <img src="${qrSrc}" alt="QR Code" style="width: 150px; height: auto; margin: 8pt auto; border: none; padding: 0;" />
             <div class="terms">
               <strong>Terms & Conditions:</strong>
               <ul>
