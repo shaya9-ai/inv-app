@@ -289,8 +289,8 @@ export default function InventoryGrid({ products: initial }: Props) {
       <CartSidebar onSave={saveInvoice} saving={savingInvoice} />
 
       {openForm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
-          <div className="card w-full max-w-lg p-6 shadow-glow animate-scale-in">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center z-50 animate-fade-in overflow-y-auto p-4 md:p-8">
+          <div className="card w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 shadow-glow animate-scale-in mt-6 md:mt-0">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">
                 {editing ? "Edit Product" : "Add Product"}
