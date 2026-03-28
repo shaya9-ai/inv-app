@@ -248,11 +248,14 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
       </html>
     `;
 
-    // If running inside Electron, ask the main process to open the print HTML in the default browser.
+    // If running inside Electron, ask the main process to open in default browser via POST (writes temp file).
     const isElectron = navigator.userAgent.includes("Electron");
     if (isElectron) {
-      const dataUrl = "data:text/html," + encodeURIComponent(html);
-      fetch(`/open-external?url=${encodeURIComponent(dataUrl)}`).catch(() => {});
+      fetch("/open-external", {
+        method: "POST",
+        headers: { "Content-Type": "text/html" },
+        body: html,
+      }).catch(() => {});
       return;
     }
 

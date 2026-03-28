@@ -3,9 +3,13 @@ const { dialog } = require("electron");
 const path = require("path");
 const http = require("http");
 const fs = require("fs");
+const os = require("os");
 const Module = require("module");
 const next = require("next");
 const crypto = require("crypto");
+
+// Some environments (RDP/virtual GPUs) throw transient GPU command buffer errors; disable hardware acceleration to avoid crash.
+app.disableHardwareAcceleration();
 
 const isDev = !app.isPackaged;
 const port = process.env.PORT || 8124;
@@ -227,23 +231,47 @@ async function createWindow() {
   await nextApp.prepare();
 
   server = http.createServer(async (req, res) => {
-    // lightweight bridge to open URLs in the user's default browser from the renderer
-    if (req.url && req.url.startsWith("/open-external?url=")) {
-      const target = decodeURIComponent(req.url.slice("/open-external?url=".length));
-      try {
-        // guard: allow only data URLs or http/https
-        if (!/^data:text\/html[,;]/i.test(target) && !/^https?:\/\//i.test(target)) {
-          res.statusCode = 400;
-          res.end("invalid url");
-          return;
+    // lightweight bridge to open content in the default browser from the renderer
+    if (req.url && req.url.startsWith("/open-external")) {
+      // GET: expects ?url=... (data:, http/https)
+      if (req.method === "GET" && req.url.startsWith("/open-external?url=")) {
+        const target = decodeURIComponent(req.url.slice("/open-external?url=".length));
+        try {
+          if (!/^data:text\/html[,;]/i.test(target) && !/^https?:\/\//i.test(target)) {
+            res.statusCode = 400;
+            res.end("invalid url");
+            return;
+          }
+          await shell.openExternal(target);
+          res.statusCode = 200;
+          res.end("ok");
+        } catch {
+          res.statusCode = 500;
+          res.end("fail");
         }
-        await shell.openExternal(target);
-        res.statusCode = 200;
-        res.end("ok");
-      } catch (err) {
-        res.statusCode = 500;
-        res.end("fail");
+        return;
       }
+      // POST: body contains HTML; write to temp file and open file://
+      if (req.method === "POST") {
+        let body = "";
+        req.on("data", (chunk) => (body += chunk));
+        req.on("end", async () => {
+          try {
+            if (!body) throw new Error("empty");
+            const tmpPath = path.join(os.tmpdir(), `invoice-${Date.now()}.html`);
+            await fs.promises.writeFile(tmpPath, body, "utf-8");
+            await shell.openExternal(`file://${tmpPath}`);
+            res.statusCode = 200;
+            res.end("ok");
+          } catch {
+            res.statusCode = 500;
+            res.end("fail");
+          }
+        });
+        return;
+      }
+      res.statusCode = 405;
+      res.end("method");
       return;
     }
 
