@@ -1,8 +1,8 @@
 {
-  "name": "inv",
+  "name": "Inventory Manager",
   "version": "0.1.0",
   "private": true,
-  "author": "xpertsphere",
+  "author": "VNE Digital",
   "main": "electron/main.js",
   "scripts": {
     "dev": "next dev",

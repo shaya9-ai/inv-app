@@ -35,7 +35,7 @@ Module._resolveFilename = function patchedResolve(request, parent, isMain, optio
   if (request.startsWith(".prisma/client/")) {
     const relativeFile = request.replace(".prisma/client/", "");
     const devPath = path.join(__dirname, "..", "node_modules", ".prisma", "client", `${relativeFile}.js`);
-    const packagedPath = path.join(process.resourcesPath, "resources", "prisma-client", `${relativeFile}.js`);
+    const packagedPath = path.join(process.resourcesPath, "prisma-client", `${relativeFile}.js`);
     const resolvedPath = app.isPackaged ? packagedPath : devPath;
     if (fs.existsSync(resolvedPath)) {
       return resolvedPath;
@@ -190,7 +190,7 @@ async function prepareRuntimeFiles() {
   const userDataPath = app.getPath("userData");
   await fs.promises.mkdir(userDataPath, { recursive: true });
 
-  const packagedDbPath = path.join(process.resourcesPath, "resources", "dev.db");
+  const packagedDbPath = path.join(process.resourcesPath, "dev.db");
   const devDbPath = path.join(__dirname, "..", "prisma", "dev.db");
   const sourceDbPath = app.isPackaged ? packagedDbPath : devDbPath;
   const runtimeDbPath = path.join(userDataPath, "dev.db");
