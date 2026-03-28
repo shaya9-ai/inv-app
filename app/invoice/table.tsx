@@ -250,6 +250,11 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
             <p>www.vnedigital.com</p>
           </div>
         </body>
+        <script>
+          window.onload = function() {
+            setTimeout(function() { window.print(); }, 2000);
+          };
+        </script>
       </html>
     `;
 
