@@ -59,10 +59,12 @@ function getAppDataDir() {
 }
 
 function readPublicKey() {
-  // In dev we read from repo; in production the file is copied to resources/
+  // In dev we read from repo; in production the file is copied alongside app.asar
   const devPath = path.join(__dirname, "..", "license", "public.pem");
   const prodPath = path.join(process.resourcesPath, "license", "public.pem");
-  const pubPath = fs.existsSync(prodPath) ? prodPath : devPath;
+  const asarSibling = path.join(process.resourcesPath, "public.pem");
+  const pubPath = [prodPath, asarSibling, devPath].find((p) => fs.existsSync(p));
+  if (!pubPath) throw new Error("public.pem missing");
   return fs.readFileSync(pubPath, "utf-8");
 }
 
