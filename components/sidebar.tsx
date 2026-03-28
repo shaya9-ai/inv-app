@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Boxes, Home, Package2, Receipt, Settings, ShoppingCart, Waypoints } from "lucide-react";
+import { Boxes, Home, Package2, Receipt, Settings, ShoppingCart, Waypoints, BarChart3 } from "lucide-react";
 import { useCart } from "./cart-provider";
 import clsx from "clsx";
 import { useEffect, useState } from "react";
@@ -13,8 +13,7 @@ const nav = [
   { href: "/checkin", label: "Check-in", icon: Waypoints },
   { href: "/movements", label: "Movements", icon: Package2 },
   { href: "/invoice", label: "Invoices", icon: Receipt },
-  { href: "/receipts", label: "Receipts", icon: Receipt },
-  // New Invoice removed (can be created from Inventory cart)
+  { href: "/reports", label: "Reports", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

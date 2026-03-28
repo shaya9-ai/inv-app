@@ -2,11 +2,12 @@
 
 import { Invoice, Product } from "@prisma/client";
 import { useEffect, useMemo, useState } from "react";
-import { format } from "date-fns";
+import { format, startOfDay, endOfDay, subDays, isWithinInterval, startOfMonth, endOfMonth } from "date-fns";
 import { toast } from "sonner";
-import { Loader2, Edit, Printer, Trash2, Plus, Save } from "lucide-react";
+import { Loader2, Edit, Printer, Trash2, Plus, Save, Calendar, ChevronDown, X, FileSpreadsheet } from "lucide-react";
 import { CartItem } from "../../lib/types";
 import { calculateTotal } from "../../lib/cartMath";
+import { exportToExcel } from "../../lib/exportInvoices";
 import scanmeImage from "../../public/scanme.png";
 import logoImage from "../../public/logo.png";
 
@@ -19,12 +20,18 @@ type InvoiceItem = {
   unit?: string;
   quantity: number;
   price: number;
+  buyPrice?: number;
 };
 
 type InvoiceWithItems = Invoice & { parsedItems: InvoiceItem[] };
 
 function parseInvoice(inv: Invoice): InvoiceWithItems {
-  const parsed = (JSON.parse(inv.items) as InvoiceItem[]) ?? [];
+  let parsed: InvoiceItem[] = [];
+  try {
+    parsed = JSON.parse(inv.items || "[]") as InvoiceItem[];
+  } catch {
+    console.error("Failed to parse invoice items for invoice:", inv.id);
+  }
   return { ...inv, parsedItems: parsed };
 }
 
@@ -38,6 +45,10 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
   const [customer, setCustomer] = useState({ name: "", phone: "" });
   const [discount, setDiscount] = useState({ value: 0, type: "AMOUNT" as "AMOUNT" | "PERCENT" });
   const [loading, setLoading] = useState(false);
+  const [dateFilter, setDateFilter] = useState<"all" | "today" | "yesterday" | "week" | "month" | "custom">("all");
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [customDateFrom, setCustomDateFrom] = useState("");
+  const [customDateTo, setCustomDateTo] = useState("");
 
   const openEdit = (inv: InvoiceWithItems) => {
     setEditing(inv);
@@ -64,6 +75,15 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
       document.body.style.overflow = prev;
     };
   }, [editing]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const filter = params.get("filter");
+    if (filter === "today" || filter === "yesterday" || filter === "week" || filter === "month") {
+      setDateFilter(filter);
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+  }, []);
 
   const addItem = (productId: number) => {
     const product = products.find((p) => p.id === productId);
@@ -108,16 +128,10 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
   };
 
   const print = (inv: InvoiceWithItems) => {
-    const receiptMode = window.confirm("Use 80mm receipt mode? Cancel = A4");
-    const pageCss = receiptMode
-      ? `
-        @page { size: 80mm auto; margin: 0; }
-        body { width: 80mm !important; margin: 0 !important; padding: 1.5mm !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; zoom: 200%; }
-      `
-      : `
-        @page { size: A4 portrait; margin: 80mm; }
-        body { max-width: 190mm; margin: 80mm; }
-      `;
+    const pageCss = `
+      @page { size: 80mm auto; margin: 0; }
+      body { width: 80mm !important; margin: 0 !important; padding: 1.5mm !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; zoom: 200%; }
+    `;
 
     const numbers = calculateTotal({
       items: inv.parsedItems as any,
@@ -287,9 +301,46 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
   };
 
   const filtered = useMemo(() => {
+    let result = parsed;
+
+    if (dateFilter !== "all") {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      result = result.filter((inv) => {
+        const invDate = new Date(inv.createdAt);
+        invDate.setHours(0, 0, 0, 0);
+
+        switch (dateFilter) {
+          case "today":
+            return invDate.getTime() === today.getTime();
+          case "yesterday": {
+            const yesterday = subDays(today, 1);
+            return invDate.getTime() === yesterday.getTime();
+          }
+          case "week":
+            return invDate >= subDays(today, 7);
+          case "month": {
+            const monthStart = startOfMonth(today);
+            const monthEnd = endOfMonth(today);
+            return isWithinInterval(invDate, { start: monthStart, end: monthEnd });
+          }
+          case "custom":
+            if (customDateFrom && customDateTo) {
+              const from = startOfDay(new Date(customDateFrom));
+              const to = endOfDay(new Date(customDateTo));
+              return isWithinInterval(invDate, { start: from, end: to });
+            }
+            return true;
+          default:
+            return true;
+        }
+      });
+    }
+
     const q = search.trim().toLowerCase();
-    if (!q) return parsed;
-    return parsed.filter((inv) => {
+    if (!q) return result;
+    return result.filter((inv) => {
       const haystack = [
         inv.invoiceNumber,
         inv.customerName,
@@ -300,57 +351,377 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
         .toLowerCase();
       return haystack.includes(q);
     });
-  }, [parsed, search]);
+  }, [parsed, search, dateFilter, customDateFrom, customDateTo]);
+
+  const calculateProfit = (inv: InvoiceWithItems) => {
+    return inv.parsedItems.reduce((sum, item) => {
+      const buyPrice = item.buyPrice ?? 0;
+      return sum + (item.price - buyPrice) * item.quantity;
+    }, 0);
+  };
+
+  const calculateCost = (inv: InvoiceWithItems) => {
+    return inv.parsedItems.reduce((sum, item) => {
+      const buyPrice = item.buyPrice ?? 0;
+      return sum + buyPrice * item.quantity;
+    }, 0);
+  };
+
+  const printAllInvoices = () => {
+    const grandTotalCost = filtered.reduce((sum, inv) => sum + calculateCost(inv), 0);
+    const grandTotalSale = filtered.reduce((sum, inv) => sum + inv.total, 0);
+    const grandTotalProfit = filtered.reduce((sum, inv) => sum + calculateProfit(inv), 0);
+
+    let globalSNo = 0;
+    const allProductRows = filtered.flatMap((inv) =>
+      inv.parsedItems.map((item) => {
+        globalSNo++;
+        const itemCost = (item.buyPrice ?? 0) * item.quantity;
+        const itemSale = item.price * item.quantity;
+        return `
+          <tr>
+            <td class="sno">${globalSNo}</td>
+            <td class="prod-name">${item.name}${item.unit ? ` (${item.unit})` : ""}</td>
+            <td class="qty">${item.quantity}</td>
+            <td class="cost">Rs ${itemCost.toLocaleString("en-PK")}</td>
+            <td class="sale">Rs ${itemSale.toLocaleString("en-PK")}</td>
+          </tr>
+        `;
+      })
+    ).join('');
+
+    const content = `
+      <div class="receipt">
+        <div class="header">
+          <div class="company">S•PRINT TECH MOBILE</div>
+          <div class="company">ACCESSORIES</div>
+          <div class="report-title">SALES REPORT</div>
+          <div class="report-info">${getFilterLabel()} — ${filtered.length} Invoices</div>
+          <div class="report-info">${format(new Date(), "dd MMM yyyy, HH:mm")}</div>
+          <div class="report-info">${globalSNo} Products Sold</div>
+        </div>
+        <div class="divider"></div>
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th class="sno-col">S#</th>
+              <th class="prod-col">Product</th>
+              <th class="qty-col">Qty</th>
+              <th class="cost-col">Cost</th>
+              <th class="sale-col">Sale</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${allProductRows}
+          </tbody>
+        </table>
+        <div class="divider"></div>
+        <div class="grand-total-box">
+          <div class="grand-label">SUMMARY</div>
+          <div class="grand-row">
+            <span>Total Cost:</span>
+            <span>Rs ${grandTotalCost.toLocaleString("en-PK")}</span>
+          </div>
+          <div class="grand-row">
+            <span>Total Sale:</span>
+            <span>Rs ${grandTotalSale.toLocaleString("en-PK")}</span>
+          </div>
+          <div class="grand-row ${grandTotalProfit >= 0 ? 'profit' : 'loss'}">
+            <span>Total Profit:</span>
+            <span>Rs ${grandTotalProfit.toLocaleString("en-PK")}</span>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="thank-you">Thank You!</div>
+          <div class="footer-text">Powered by VNE Digital — www.vnedigital.com</div>
+        </div>
+      </div>
+    `;
+
+    const receiptStyles = `
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: 'Courier New', monospace; width: 80mm; margin: 0 auto; padding: 4mm; font-size: 11px; }
+      .receipt { max-width: 80mm; margin: 0 auto; }
+      .header { text-align: center; margin-bottom: 6px; }
+      .company { font-size: 16px; font-weight: 900; letter-spacing: 0.5px; }
+      .report-title { font-size: 14px; font-weight: 900; margin: 4px 0; color: #000; letter-spacing: 1px; }
+      .report-info { font-size: 9px; color: #666; }
+      .divider { border-top: 2px solid #000; margin: 5px 0; }
+      .items-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+      .items-table th { background: #000; color: #fff; text-align: left; padding: 3px 3px; font-weight: 900; letter-spacing: 0.5px; }
+      .items-table td { padding: 2px 3px; border-bottom: 1px solid #ddd; vertical-align: top; }
+      .sno-col { width: 8%; text-align: center; }
+      .prod-col { width: 44%; }
+      .qty-col { width: 8%; text-align: center; }
+      .cost-col { width: 20%; text-align: right; }
+      .sale-col { width: 20%; text-align: right; }
+      .sno { text-align: center; font-weight: bold; }
+      .prod-name { font-weight: bold; }
+      .qty { text-align: center; }
+      .cost, .sale { text-align: right; }
+      .grand-total-box { background: #000; color: #fff; padding: 6px 8px; font-weight: bold; }
+      .grand-label { font-size: 14px; font-weight: 900; text-align: center; margin-bottom: 4px; border-bottom: 2px solid #fff; padding-bottom: 4px; letter-spacing: 1px; }
+      .grand-row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 10px; }
+      .grand-row.profit span:last-child { color: #86efac; }
+      .grand-row.loss span:last-child { color: #fca5a5; }
+      .footer { text-align: center; margin-top: 6px; padding-top: 5px; border-top: 2px solid #000; }
+      .thank-you { font-size: 14px; font-weight: 900; margin-bottom: 3px; letter-spacing: 1px; }
+      .footer-text { font-size: 8px; color: #666; }
+      @media print { @page { size: 80mm auto; margin: 0; } body { width: 80mm !important; zoom: 200%; } }
+    `;
+
+    const isElectron = navigator.userAgent.includes("Electron");
+    const fullHtml = `<!DOCTYPE html><html><head><title>Sales Report - ${getFilterLabel()}</title><style>${receiptStyles}</style></head><body>${content}<script>window.onload=function(){setTimeout(function(){window.print();},1000);}</script></body></html>`;
+
+    if (isElectron) {
+      fetch("/open-external", {
+        method: "POST",
+        headers: { "Content-Type": "text/html" },
+        body: fullHtml,
+      }).catch(() => {});
+      return;
+    }
+
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.write(fullHtml);
+      printWindow.document.close();
+    }
+  };
+
+  const totalSales = filtered.reduce((sum, inv) => sum + inv.total, 0);
+  const totalProfit = filtered.reduce((sum, inv) => sum + calculateProfit(inv), 0);
+  const totalCost = filtered.reduce((sum, inv) => sum + calculateCost(inv), 0);
+  const profitMargin = totalSales > 0 ? (totalProfit / totalSales) * 100 : 0;
+  const isProfit = totalProfit >= 0;
+
+  const getFilterLabel = () => {
+    switch (dateFilter) {
+      case "today": return "Today";
+      case "yesterday": return "Yesterday";
+      case "week": return "Last 7 Days";
+      case "month": return "This Month";
+      case "custom": return customDateFrom && customDateTo ? `${format(new Date(customDateFrom), "dd MMM")} - ${format(new Date(customDateTo), "dd MMM")}` : "Custom";
+      default: return "All Time";
+    }
+  };
+
+  const handleCustomApply = () => {
+    if (customDateFrom && customDateTo) {
+      setDateFilter("custom");
+      setShowDatePicker(false);
+    }
+  };
 
   return (
-    <div className="card p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-        <div className="flex-1 min-w-[240px]">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search invoice #, customer, phone, or product..."
-            className="input w-full"
-            aria-label="Search invoices"
-          />
+    <div>
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+        <div className="card p-4 bg-gradient-to-br from-[#1a1a22] to-[#12121a] border border-[var(--accent)]/30">
+          <p className="text-xs text-gray-400 uppercase tracking-wider">Total Sales</p>
+          <p className="text-2xl font-bold text-[var(--accent)] mt-1">Rs {totalSales.toLocaleString("en-PK")}</p>
+          <p className="text-xs text-gray-500 mt-1">{filtered.length} invoices</p>
         </div>
-        {search && (
-          <span className="text-xs text-gray-400">
-            Showing {filtered.length}/{parsed.length} result{filtered.length === 1 ? "" : "s"}
-          </span>
-        )}
+        <div className="card p-4 bg-gradient-to-br from-[#1a1a22] to-[#12121a] border border-orange-500/30">
+          <p className="text-xs text-orange-400 uppercase tracking-wider">Total Cost</p>
+          <p className="text-2xl font-bold text-orange-400 mt-1">Rs {totalCost.toLocaleString("en-PK")}</p>
+          <p className="text-xs text-gray-500 mt-1">Buy price</p>
+        </div>
+        <div className={`card p-4 bg-gradient-to-br from-[#1a1a22] to-[#12121a] border ${isProfit ? "border-green-500/30" : "border-red-500/30"}`}>
+          <p className={`text-xs uppercase tracking-wider ${isProfit ? "text-green-400" : "text-red-400"}`}>Total Profit</p>
+          <p className={`text-2xl font-bold mt-1 ${isProfit ? "text-green-400" : "text-red-400"}`}>
+            Rs {totalProfit.toLocaleString("en-PK")}
+          </p>
+          <p className={`text-xs mt-1 ${isProfit ? "text-green-400/70" : "text-red-400/70"}`}>
+            {isProfit ? "+" : ""}{profitMargin.toFixed(1)}% margin
+          </p>
+        </div>
+        <div className="card p-4 bg-gradient-to-br from-[#1a1a22] to-[#12121a] border border-blue-500/30">
+          <p className="text-xs text-gray-400 uppercase tracking-wider">Avg Profit</p>
+          <p className={`text-2xl font-bold mt-1 ${isProfit ? "text-blue-400" : "text-red-400"}`}>
+            Rs {filtered.length > 0 ? Math.round(totalProfit / filtered.length).toLocaleString("en-PK") : 0}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">Per invoice</p>
+        </div>
+        <div className="card p-4 bg-gradient-to-br from-[#1a1a22] to-[#12121a] border border-purple-500/30">
+          <p className="text-xs text-gray-400 uppercase tracking-wider">Period</p>
+          <p className="text-lg font-bold text-purple-400 mt-1">{getFilterLabel()}</p>
+          <p className="text-xs text-gray-500 mt-1">Filtered view</p>
+        </div>
       </div>
+
+      <div className="card p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div className="flex flex-wrap items-center gap-2">
+            {(["all", "today", "yesterday", "week", "month"] as const).map((filter) => (
+            <button
+              key={filter}
+              onClick={() => { setDateFilter(filter); setShowDatePicker(false); }}
+              className={`px-3 py-1.5 text-xs rounded-lg border transition-all ${
+                dateFilter === filter
+                  ? "bg-[var(--accent)] text-black border-[var(--accent)]"
+                  : "border-[var(--border)] text-gray-400 hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              }`}
+            >
+              {filter === "all" ? "All" : filter === "today" ? "Today" : filter === "yesterday" ? "Yesterday" : filter === "week" ? "Week" : "Month"}
+            </button>
+          ))}
+          <div className="relative">
+            <button
+              onClick={() => setShowDatePicker(!showDatePicker)}
+              className={`px-3 py-1.5 text-xs rounded-lg border flex items-center gap-1 transition-all ${
+                dateFilter === "custom"
+                  ? "bg-[var(--accent)] text-black border-[var(--accent)]"
+                  : "border-[var(--border)] text-gray-400 hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              }`}
+            >
+              <Calendar size={12} />
+              {dateFilter === "custom" ? getFilterLabel() : "Custom"}
+              <ChevronDown size={12} />
+            </button>
+            {showDatePicker && (
+              <div className="absolute top-full left-0 mt-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 z-50 shadow-xl animate-scale-in">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs text-gray-400">Select Date Range</p>
+                  <button onClick={() => setShowDatePicker(false)} className="text-gray-500 hover:text-white">
+                    <X size={14} />
+                  </button>
+                </div>
+                <div className="flex flex-col gap-2 mb-3">
+                  <label className="text-xs text-gray-400">From</label>
+                  <input
+                    type="date"
+                    value={customDateFrom}
+                    onChange={(e) => setCustomDateFrom(e.target.value)}
+                    className="input text-sm"
+                  />
+                  <label className="text-xs text-gray-400">To</label>
+                  <input
+                    type="date"
+                    value={customDateTo}
+                    onChange={(e) => setCustomDateTo(e.target.value)}
+                    className="input text-sm"
+                  />
+                </div>
+                <button onClick={handleCustomApply} className="btn btn-primary w-full text-xs py-2" disabled={!customDateFrom || !customDateTo}>
+                  Apply Filter
+                </button>
+              </div>
+            )}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1 min-w-[200px]">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search invoice #, customer, phone, or product..."
+              className="input w-full pr-8"
+              aria-label="Search invoices"
+            />
+            {search && (
+              <button onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+                <X size={14} />
+              </button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => { exportToExcel(filtered as any); toast.success(`Exported ${filtered.length} invoices to Excel!`); }}
+              className="btn px-3 py-2 text-xs border border-green-500/50 text-green-400 hover:bg-green-500 hover:text-black transition-all flex items-center gap-1.5"
+              title="Export to Excel"
+            >
+              <FileSpreadsheet size={14} /> Excel
+            </button>
+            <button
+              onClick={() => { printAllInvoices(); toast.success(`Printing ${filtered.length} invoices!`); }}
+              className="btn px-3 py-2 text-xs border border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)] hover:text-black transition-all flex items-center gap-1.5"
+              title="Print All Invoices"
+            >
+              <Printer size={14} /> Print All
+            </button>
+          </div>
+        </div>
+
+        {(dateFilter !== "all" || search) && (
+        <div className="flex items-center justify-between mb-3 text-xs">
+          <span className="text-gray-400">
+            Showing <span className="text-[var(--accent)]">{filtered.length}</span> of {parsed.length} invoices
+            {dateFilter !== "all" && ` (${getFilterLabel()})`}
+          </span>
+          <button
+            onClick={() => { setDateFilter("all"); setSearch(""); setCustomDateFrom(""); setCustomDateTo(""); }}
+            className="text-gray-400 hover:text-[var(--accent)] flex items-center gap-1"
+          >
+            <X size={12} /> Clear filters
+          </button>
+        </div>
+      )}
+      </div>
+
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="text-left text-gray-400">
             <tr className="border-b border-[var(--border)]">
               <th className="py-2">Invoice #</th>
               <th>Customer</th>
+              <th>Products</th>
+              <th>Cost</th>
               <th>Total</th>
+              <th className="text-green-400">Profit</th>
               <th>Date</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((inv) => (
-              <tr key={inv.id} className="border-b border-[var(--border)]">
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="py-8 text-center text-gray-500">
+                  No invoices found for the selected period
+                </td>
+              </tr>
+            ) : filtered.map((inv) => (
+              <tr key={inv.id} className="border-b border-[var(--border)] hover:bg-white/5 transition-colors">
                 <td className="py-2 font-semibold">#{inv.invoiceNumber}</td>
                 <td className="leading-tight">
-                  <div>{inv.customerName}</div>
+                  <div>{inv.customerName || "Walk-in"}</div>
                   {inv.customerPhone && <div className="text-xs text-gray-400">{inv.customerPhone}</div>}
                 </td>
-                <td className="text-[var(--accent)]">Rs {formatMoney(inv.total, 2)}</td>
-                <td>{format(inv.createdAt, "PP")}</td>
-                <td className="flex gap-2 py-2">
-                  <button onClick={() => openEdit(inv)} className="btn px-2 py-1 text-xs border border-[var(--border)]">
-                    <Edit size={14} /> Edit
-                  </button>
-                  <button onClick={() => print(inv)} className="btn px-2 py-1 text-xs border border-[var(--border)]">
-                    <Printer size={14} /> Print
-                  </button>
-                  <button onClick={() => remove(inv.id)} className="btn px-2 py-1 text-xs border border-red-500 text-red-400">
-                    <Trash2 size={14} /> Delete
-                  </button>
+                <td className="py-2">
+                  <div className="flex flex-wrap gap-1">
+                    {inv.parsedItems.slice(0, 3).map((it, idx) => (
+                      <span key={idx} className="px-2 py-0.5 bg-[var(--bg-card)] rounded text-xs border border-[var(--border)]">
+                        {it.quantity}x {it.name}
+                      </span>
+                    ))}
+                    {inv.parsedItems.length > 3 && (
+                      <span className="px-2 py-0.5 bg-[var(--accent)]/20 text-[var(--accent)] rounded text-xs">
+                        +{inv.parsedItems.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                </td>
+                <td className="text-gray-400 font-semibold">Rs {formatMoney(calculateCost(inv), 0)}</td>
+                <td className="text-[var(--accent)] font-semibold">Rs {formatMoney(inv.total, 2)}</td>
+                <td className={`font-semibold ${calculateProfit(inv) >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  Rs {calculateProfit(inv) >= 0 ? "+" : ""}{formatMoney(calculateProfit(inv), 0)}
+                </td>
+                <td>
+                  <div className="text-sm">{format(inv.createdAt, "dd MMM yyyy")}</div>
+                  <div className="text-xs text-gray-400">{format(inv.createdAt, "hh:mm a")}</div>
+                </td>
+                <td className="py-2">
+                  <div className="flex gap-1.5">
+                    <button onClick={() => print(inv)} className="btn px-2.5 py-1.5 text-xs border border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)] hover:text-black transition-all" title="Print Invoice">
+                      <Printer size={14} />
+                    </button>
+                    <button onClick={() => openEdit(inv)} className="btn px-2.5 py-1.5 text-xs border border-[var(--border)] hover:border-blue-400 hover:text-blue-400 transition-all" title="Edit Invoice">
+                      <Edit size={14} />
+                    </button>
+                    <button onClick={() => remove(inv.id)} className="btn px-2.5 py-1.5 text-xs border border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white transition-all" title="Delete Invoice">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

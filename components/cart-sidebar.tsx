@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Trash2, Minus, Plus, Printer, Save, Percent, BadgeDollarSign } from "lucide-react";
+import { Trash2, Minus, Plus, Save, Percent, BadgeDollarSign } from "lucide-react";
 import { useCart } from "./cart-provider";
 import { calculateTotal } from "../lib/cartMath";
 import clsx from "clsx";
@@ -144,22 +144,14 @@ export default function CartSidebar({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mt-4">
+      <div className="mt-4">
         <button
           onClick={() => onSave?.()}
           disabled={saving}
-          className="btn btn-primary gap-2 disabled:opacity-60"
+          className="btn btn-primary gap-2 w-full disabled:opacity-60"
         >
           <Save size={16} />
           Save Invoice
-        </button>
-        <button
-          onClick={() => onSave?.(true)}
-          disabled={saving}
-          className="btn gap-2 border border-[var(--border)] hover:border-[var(--accent)]"
-        >
-          <Printer size={16} />
-          Save & Print
         </button>
       </div>
     </aside>
