@@ -207,17 +207,19 @@ async function prepareRuntimeFiles() {
     console.log("[prepareRuntimeFiles] runtimeDbPath:", runtimeDbPath);
     console.log("[prepareRuntimeFiles] runtimeDbPath exists:", fs.existsSync(runtimeDbPath));
     
-  // Always refresh runtime DB from packaged copy if present (avoids stale/locked files)
-    if (fs.existsSync(sourceDbPath)) {
-      console.log("[prepareRuntimeFiles] Copying database from", sourceDbPath, "to", runtimeDbPath);
-      try { await fs.promises.unlink(runtimeDbPath); } catch {}
-      await fs.promises.copyFile(sourceDbPath, runtimeDbPath);
-      const stats = await fs.promises.stat(runtimeDbPath);
-      console.log("[prepareRuntimeFiles] Database copied successfully, size:", stats.size, "bytes");
+    if (!fs.existsSync(runtimeDbPath)) {
+      if (fs.existsSync(sourceDbPath)) {
+        console.log("[prepareRuntimeFiles] Copying database from", sourceDbPath, "to", runtimeDbPath);
+        await fs.promises.copyFile(sourceDbPath, runtimeDbPath);
+        const stats = await fs.promises.stat(runtimeDbPath);
+        console.log("[prepareRuntimeFiles] Database copied successfully, size:", stats.size, "bytes");
+      } else {
+        console.warn("[prepareRuntimeFiles] Source database not found at", sourceDbPath);
+        console.warn("[prepareRuntimeFiles] Creating new database file (schema will need to be initialized)");
+        await fs.promises.writeFile(runtimeDbPath, "");
+      }
     } else {
-      console.warn("[prepareRuntimeFiles] Source database not found at", sourceDbPath);
-      console.warn("[prepareRuntimeFiles] Creating new database file (schema will need to be initialized)");
-      await fs.promises.writeFile(runtimeDbPath, "");
+      console.log("[prepareRuntimeFiles] Using existing runtime database at", runtimeDbPath);
     }
 
     // Ensure writable in user data (copied files can inherit read-only from Program Files)
