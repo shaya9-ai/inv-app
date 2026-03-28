@@ -58,7 +58,8 @@
     ],
     "asarUnpack": [
       "node_modules/.prisma/client/**/*",
-      "license/public.pem"
+      "license/public.pem",
+      "public.pem"
     ],
     "asar": true,
     "extraResources": [
@@ -72,6 +73,13 @@
       {
         "from": "license/public.pem",
         "to": "license/public.pem",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "license/public.pem",
+        "to": "public.pem",
         "filter": [
           "**/*"
         ]
