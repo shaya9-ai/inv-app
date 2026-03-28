@@ -30,6 +30,8 @@ function parseInvoice(inv: Invoice): InvoiceWithItems {
 
 export default function InvoiceList({ invoices, products }: { invoices: Invoice[]; products: Product[] }) {
   const parsed = useMemo(() => invoices.map(parseInvoice), [invoices]);
+  const formatMoney = (n: number, fraction: number = 0) =>
+    n.toLocaleString("en-PK", { minimumFractionDigits: fraction, maximumFractionDigits: fraction });
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<InvoiceWithItems | null>(null);
   const [items, setItems] = useState<InvoiceItem[]>([]);
@@ -124,6 +126,8 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
       customerName: inv.customerName,
       customerPhone: inv.customerPhone ?? "",
     });
+    const formattedSubtotal = formatMoney(numbers.subtotal, 0);
+    const formattedTotal = formatMoney(numbers.total, 0);
 
     const baseUrl = window.location.origin;
     const logoVector = `${baseUrl}${LOGO_VECTOR_SRC}`;
@@ -212,17 +216,17 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
                       <td style="text-align: center;">${idx + 1}</td>
                       <td style="text-align: center;">${it.quantity}</td>
                       <td>${it.name}${it.unit ? ` (${it.unit})` : ""}</td>
-                      <td style="text-align: right;">Rs${it.price}</td>
-                      <td style="text-align: right;">Rs${(it.price * it.quantity).toFixed(0)}</td>
+                      <td style="text-align: right;">Rs${Number(it.price).toLocaleString("en-PK")}</td>
+                      <td style="text-align: right;">Rs${(it.price * it.quantity).toLocaleString("en-PK")}</td>
                     </tr>`
                 )
                 .join("")}
             </tbody>
           </table>
           <div class="totals">
-            <div class="total-row">Subtotal: Rs ${numbers.subtotal.toFixed(0)}</div>
+            <div class="total-row">Subtotal: Rs ${formattedSubtotal}</div>
             ${inv.discount > 0 ? `<div class="discount">Discount: ${inv.discount}${inv.discountType === "PERCENT" ? "%" : ""}</div>` : ""}
-            <div class="grand-total">Total: Rs ${numbers.total.toFixed(0)}</div>
+            <div class="grand-total">Total: Rs ${formattedTotal}</div>
           </div>
           <div class="footer">
             <p>Thank you for business!</p>
@@ -335,7 +339,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
                   <div>{inv.customerName}</div>
                   {inv.customerPhone && <div className="text-xs text-gray-400">{inv.customerPhone}</div>}
                 </td>
-                <td className="text-[var(--accent)]">Rs {inv.total.toFixed(2)}</td>
+                <td className="text-[var(--accent)]">Rs {formatMoney(inv.total, 2)}</td>
                 <td>{format(inv.createdAt, "PP")}</td>
                 <td className="flex gap-2 py-2">
                   <button onClick={() => openEdit(inv)} className="btn px-2 py-1 text-xs border border-[var(--border)]">
@@ -481,8 +485,8 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
 
             <div className="flex justify-between items-center mt-4">
               <div>
-                <p className="text-sm text-gray-400">Subtotal: Rs {totals.subtotal.toFixed(2)}</p>
-                <p className="text-sm text-gray-400">Total: Rs {totals.total.toFixed(2)}</p>
+                <p className="text-sm text-gray-400">Subtotal: Rs {formatMoney(totals.subtotal, 2)}</p>
+                <p className="text-sm text-gray-400">Total: Rs {formatMoney(totals.total, 2)}</p>
               </div>
               <div className="flex gap-3">
                 <button onClick={() => setEditing(null)} className="btn border border-[var(--border)]">
