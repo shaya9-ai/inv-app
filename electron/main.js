@@ -206,16 +206,15 @@ async function prepareRuntimeFiles() {
     console.log("[prepareRuntimeFiles] runtimeDbPath:", runtimeDbPath);
     console.log("[prepareRuntimeFiles] runtimeDbPath exists:", fs.existsSync(runtimeDbPath));
     
-    // Copy database from source if runtime doesn't have it
-    if (!fs.existsSync(runtimeDbPath) && fs.existsSync(sourceDbPath)) {
+  // Always refresh runtime DB from packaged copy if present (avoids stale/locked files)
+    if (fs.existsSync(sourceDbPath)) {
       console.log("[prepareRuntimeFiles] Copying database from", sourceDbPath, "to", runtimeDbPath);
       await fs.promises.copyFile(sourceDbPath, runtimeDbPath);
       const stats = await fs.promises.stat(runtimeDbPath);
       console.log("[prepareRuntimeFiles] Database copied successfully, size:", stats.size, "bytes");
-    } else if (!fs.existsSync(runtimeDbPath)) {
+    } else {
       console.warn("[prepareRuntimeFiles] Source database not found at", sourceDbPath);
       console.warn("[prepareRuntimeFiles] Creating new database file (schema will need to be initialized)");
-      // Just create an empty file - Prisma will fail with clear error if schema doesn't exist
       await fs.promises.writeFile(runtimeDbPath, "");
     }
   } catch (err) {
