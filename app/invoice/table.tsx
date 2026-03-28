@@ -252,9 +252,17 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
     // give assets (logo/QR) time to load before invoking the print dialog
     win.onload = () => {
       setTimeout(() => {
+        try {
+          const stored = localStorage.getItem("printZoomPercent");
+          const parsed = Number(stored ?? "45");
+          const scale = !Number.isNaN(parsed) && parsed >= 40 && parsed <= 200 ? parsed : 45; // default hard-set to 45%
+          win.document.body.style.zoom = `${scale}%`;
+        } catch {
+          win.document.body.style.zoom = "45%";
+        }
         win.focus();
         win.print();
-      }, 1000);
+      }, 2000);
     };
   };
 
