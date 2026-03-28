@@ -248,11 +248,11 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
       </html>
     `;
 
-    // If running inside Electron, open in the default system browser to use its print UI.
-    const shell = (window as any).require?.("electron")?.shell;
-    if (shell) {
+    // If running inside Electron, ask the main process to open the print HTML in the default browser.
+    const isElectron = navigator.userAgent.includes("Electron");
+    if (isElectron) {
       const dataUrl = "data:text/html," + encodeURIComponent(html);
-      shell.openExternal(dataUrl);
+      fetch(`/open-external?url=${encodeURIComponent(dataUrl)}`).catch(() => {});
       return;
     }
 

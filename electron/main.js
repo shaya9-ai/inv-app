@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, shell } = require("electron");
 const { dialog } = require("electron");
 const path = require("path");
 const http = require("http");
@@ -227,6 +227,26 @@ async function createWindow() {
   await nextApp.prepare();
 
   server = http.createServer(async (req, res) => {
+    // lightweight bridge to open URLs in the user's default browser from the renderer
+    if (req.url && req.url.startsWith("/open-external?url=")) {
+      const target = decodeURIComponent(req.url.slice("/open-external?url=".length));
+      try {
+        // guard: allow only data URLs or http/https
+        if (!/^data:text\/html[,;]/i.test(target) && !/^https?:\/\//i.test(target)) {
+          res.statusCode = 400;
+          res.end("invalid url");
+          return;
+        }
+        await shell.openExternal(target);
+        res.statusCode = 200;
+        res.end("ok");
+      } catch (err) {
+        res.statusCode = 500;
+        res.end("fail");
+      }
+      return;
+    }
+
     try {
       await handle(req, res);
     } catch (error) {
