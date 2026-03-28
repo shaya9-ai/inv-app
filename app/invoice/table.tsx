@@ -443,12 +443,12 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
       body { font-family: 'Courier New', monospace; width: 80mm; margin: 0 auto; padding: 4mm; font-size: 11px; }
       .receipt { max-width: 80mm; margin: 0 auto; }
       .header { text-align: center; margin-bottom: 6px; }
-      .company { font-size: 14px; font-weight: bold; }
-      .report-title { font-size: 12px; font-weight: bold; margin: 3px 0; color: #333; }
+      .company { font-size: 16px; font-weight: 900; letter-spacing: 0.5px; }
+      .report-title { font-size: 14px; font-weight: 900; margin: 4px 0; color: #000; letter-spacing: 1px; }
       .report-info { font-size: 9px; color: #666; }
       .divider { border-top: 2px solid #000; margin: 5px 0; }
       .items-table { width: 100%; border-collapse: collapse; font-size: 10px; }
-      .items-table th { background: #000; color: #fff; text-align: left; padding: 2px 3px; font-weight: bold; }
+      .items-table th { background: #000; color: #fff; text-align: left; padding: 3px 3px; font-weight: 900; letter-spacing: 0.5px; }
       .items-table td { padding: 2px 3px; border-bottom: 1px solid #ddd; vertical-align: top; }
       .sno-col { width: 8%; text-align: center; }
       .prod-col { width: 44%; }
@@ -459,31 +459,33 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
       .prod-name { font-weight: bold; }
       .qty { text-align: center; }
       .cost, .sale { text-align: right; }
-      .grand-total-box { background: #000; color: #fff; padding: 6px 8px; }
-      .grand-label { font-size: 12px; font-weight: bold; text-align: center; margin-bottom: 4px; border-bottom: 1px solid #444; padding-bottom: 3px; }
+      .grand-total-box { background: #000; color: #fff; padding: 6px 8px; font-weight: bold; }
+      .grand-label { font-size: 14px; font-weight: 900; text-align: center; margin-bottom: 4px; border-bottom: 2px solid #fff; padding-bottom: 4px; letter-spacing: 1px; }
       .grand-row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 10px; }
       .grand-row.profit span:last-child { color: #86efac; }
       .grand-row.loss span:last-child { color: #fca5a5; }
       .footer { text-align: center; margin-top: 6px; padding-top: 5px; border-top: 2px solid #000; }
-      .thank-you { font-size: 12px; font-weight: bold; margin-bottom: 3px; }
+      .thank-you { font-size: 14px; font-weight: 900; margin-bottom: 3px; letter-spacing: 1px; }
       .footer-text { font-size: 8px; color: #666; }
       @media print { @page { size: 80mm auto; margin: 0; } body { width: 80mm !important; zoom: 200%; } }
     `;
 
+    const isElectron = navigator.userAgent.includes("Electron");
+    const fullHtml = `<!DOCTYPE html><html><head><title>Sales Report - ${getFilterLabel()}</title><style>${receiptStyles}</style></head><body>${content}<script>window.onload=function(){setTimeout(function(){window.print();},1000);}</script></body></html>`;
+
+    if (isElectron) {
+      fetch("/open-external", {
+        method: "POST",
+        headers: { "Content-Type": "text/html" },
+        body: fullHtml,
+      }).catch(() => {});
+      return;
+    }
+
     const printWindow = window.open("", "_blank");
     if (printWindow) {
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Sales Report - ${getFilterLabel()}</title>
-            <style>${receiptStyles}</style>
-          </head>
-          <body>${content}</body>
-        </html>
-      `);
+      printWindow.document.write(fullHtml);
       printWindow.document.close();
-      printWindow.print();
     }
   };
 
