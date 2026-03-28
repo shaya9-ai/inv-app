@@ -59,7 +59,10 @@ function getAppDataDir() {
 }
 
 function readPublicKey() {
-  const pubPath = path.join(__dirname, "..", "license", "public.pem");
+  // In dev we read from repo; in production the file is copied to resources/
+  const devPath = path.join(__dirname, "..", "license", "public.pem");
+  const prodPath = path.join(process.resourcesPath, "license", "public.pem");
+  const pubPath = fs.existsSync(prodPath) ? prodPath : devPath;
   return fs.readFileSync(pubPath, "utf-8");
 }
 
