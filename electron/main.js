@@ -4,6 +4,7 @@ const path = require("path");
 const http = require("http");
 const fs = require("fs");
 const os = require("os");
+const { pathToFileURL } = require("url");
 const Module = require("module");
 const next = require("next");
 const crypto = require("crypto");
@@ -53,9 +54,9 @@ Module._resolveFilename = function patchedResolve(request, parent, isMain, optio
 };
 
 function toFileUrl(filePath) {
-  // Convert a path to the SQLite-friendly URI format Prisma expects on Windows
+  // Prisma sqlite accepts file:C:/path style; avoid triple-slash URLs
   const resolved = path.resolve(filePath).replace(/\\/g, "/");
-  return `file:///${resolved}`;
+  return `file:${resolved}`;
 }
 
 function getAppDataDir() {
@@ -209,6 +210,7 @@ async function prepareRuntimeFiles() {
   // Always refresh runtime DB from packaged copy if present (avoids stale/locked files)
     if (fs.existsSync(sourceDbPath)) {
       console.log("[prepareRuntimeFiles] Copying database from", sourceDbPath, "to", runtimeDbPath);
+      try { await fs.promises.unlink(runtimeDbPath); } catch {}
       await fs.promises.copyFile(sourceDbPath, runtimeDbPath);
       const stats = await fs.promises.stat(runtimeDbPath);
       console.log("[prepareRuntimeFiles] Database copied successfully, size:", stats.size, "bytes");
@@ -216,6 +218,13 @@ async function prepareRuntimeFiles() {
       console.warn("[prepareRuntimeFiles] Source database not found at", sourceDbPath);
       console.warn("[prepareRuntimeFiles] Creating new database file (schema will need to be initialized)");
       await fs.promises.writeFile(runtimeDbPath, "");
+    }
+
+    // Ensure writable in user data (copied files can inherit read-only from Program Files)
+    try {
+      await fs.promises.chmod(runtimeDbPath, 0o666);
+    } catch (chmodErr) {
+      console.warn("[prepareRuntimeFiles] chmod failed (non-fatal):", chmodErr.message);
     }
   } catch (err) {
     console.error("[prepareRuntimeFiles] Error preparing database:", err);
