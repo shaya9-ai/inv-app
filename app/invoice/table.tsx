@@ -455,31 +455,35 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
       body { font-family: 'Courier New', monospace; width: 80mm; margin: 0 auto; padding: 4mm; font-size: 11px; }
       .receipt { max-width: 80mm; margin: 0 auto; }
       .header { text-align: center; margin-bottom: 6px; }
-      .company { font-size: 16px; font-weight: 900; letter-spacing: 0.5px; }
-      .report-title { font-size: 14px; font-weight: 900; margin: 4px 0; color: #000; letter-spacing: 1px; }
-      .report-info { font-size: 9px; color: #666; }
-      .divider { border-top: 2px solid #000; margin: 5px 0; }
+      .company { font-size: 16px; font-weight: 900; letter-spacing: 0.5px; color: #000; }
+      .report-title { font-size: 14px; font-weight: 900; margin: 4px 0; color: #000; letter-spacing: 2px; background: #fff; padding: 4px; border: 2px solid #000; }
+      .report-info { font-size: 10px; color: #000; font-weight: 900; background: #fff; padding: 4px; border-bottom: 2px solid #000; }
+      .divider { border-top: 3px solid #000; margin: 5px 0; }
       .items-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-      .items-table th { background: #000; color: #fff; text-align: left; padding: 4px 4px; font-weight: 900; letter-spacing: 0.5px; }
-      .items-table td { padding: 3px 4px; border-bottom: 1px solid #ccc; vertical-align: top; font-weight: 600; color: #111; }
+      .items-table th { background: #000; color: #fff; text-align: left; padding: 6px 4px; font-weight: 900; letter-spacing: 1px; border: 2px solid #000; }
+      .items-table td { padding: 3px 4px; border-bottom: 2px solid #000; vertical-align: top; font-weight: 900; color: #000; border-left: 2px solid #000; border-right: 2px solid #000; }
       .sno-col { width: 8%; text-align: center; }
       .prod-col { width: 44%; }
       .qty-col { width: 8%; text-align: center; }
       .cost-col { width: 20%; text-align: right; }
       .sale-col { width: 20%; text-align: right; }
-      .sno { text-align: center; font-weight: 900; }
-      .prod-name { font-weight: 800; color: #000; }
-      .qty { text-align: center; font-weight: 700; }
-      .cost, .sale { text-align: right; font-weight: 800; }
-      .grand-total-box { background: #000; color: #fff; padding: 8px 10px; font-weight: 900; }
-      .grand-label { font-size: 16px; font-weight: 900; text-align: center; margin-bottom: 6px; border-bottom: 2px solid #fff; padding-bottom: 6px; letter-spacing: 1px; }
-      .grand-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; font-weight: 700; }
-      .grand-row span { font-weight: 800; }
-      .grand-row.profit span:last-child { color: #86efac; font-weight: 900; }
-      .grand-row.loss span:last-child { color: #fca5a5; font-weight: 900; }
-      .footer { text-align: center; margin-top: 6px; padding-top: 5px; border-top: 2px solid #000; }
-      .thank-you { font-size: 14px; font-weight: 900; margin-bottom: 3px; letter-spacing: 1px; }
-      .footer-text { font-size: 8px; color: #666; }
+      .sno { text-align: center; font-weight: 900; color: #000; border: 2px solid #000; }
+      .prod-name { font-weight: 900; color: #000; border: 2px solid #000; }
+      .qty { text-align: center; font-weight: 900; color: #000; border: 2px solid #000; }
+      .cost, .sale { text-align: right; font-weight: 900; color: #000; border: 2px solid #000; }
+      .grand-total-box { background: #000; color: #000; padding: 8px 10px; font-weight: 900; border: 3px solid #000; }
+      .grand-label { font-size: 18px; font-weight: 900; text-align: center; margin-bottom: 8px; border-bottom: 3px solid #000; padding-bottom: 8px; letter-spacing: 2px; color: #000; background: #fff; padding: 8px; }
+      .grand-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; font-weight: 900; color: #000; background: #fff; padding: 6px 8px; margin-bottom: 2px; }
+      .grand-row span { font-weight: 900; color: #000; }
+      .grand-row.profit { background: #fff; color: #000; }
+      .grand-row.profit span { font-weight: 900; color: #000; }
+      .grand-row.profit span:last-child { color: #000; font-weight: 900; background: #fff; padding: 4px 8px; }
+      .grand-row.loss { background: #fff; color: #000; }
+      .grand-row.loss span { font-weight: 900; color: #000; }
+      .grand-row.loss span:last-child { color: #000; font-weight: 900; background: #fff; padding: 4px 8px; }
+      .footer { text-align: center; margin-top: 6px; padding-top: 5px; border-top: 3px solid #000; }
+      .thank-you { font-size: 14px; font-weight: 900; margin-bottom: 3px; letter-spacing: 1px; color: #000; }
+      .footer-text { font-size: 9px; color: #000; font-weight: 900; }
       @media print { @page { size: 80mm auto; margin: 0; } body { width: 80mm !important; zoom: 200%; } }
     `;
 
