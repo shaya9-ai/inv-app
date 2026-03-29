@@ -59,6 +59,31 @@ body {
   background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
 }
 
+input[type="number"],
+input[type="text"],
+input[type="tel"],
+input[type="email"],
+input[type="date"],
+select {
+  pointer-events: auto;
+}
+
+input[type="number"]:focus,
+input[type="text"]:focus,
+input[type="tel"]:focus,
+input[type="email"]:focus,
+input[type="date"]:focus {
+  outline: none;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px rgba(247, 200, 72, 0.2);
+}
+
+/* Make native date picker icon visible on dark backgrounds */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.6);
+  opacity: 0.9;
+}
+
 .btn-primary {
   background: linear-gradient(120deg, #ffd977, #f7c848 55%, #e7ac2f);
   color: #0b0b10;
@@ -93,6 +118,11 @@ body {
 .shine {
   position: relative;
   overflow: hidden;
+  pointer-events: none;
+}
+
+.shine > * {
+  pointer-events: auto;
 }
 
 .shine::after {

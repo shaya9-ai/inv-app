@@ -1,12 +1,9 @@
 "use client";
 
 import Sidebar from "./sidebar";
-import { Bell, ShoppingCart } from "lucide-react";
-import { useCart } from "./cart-provider";
-import Link from "next/link";
+import { Bell } from "lucide-react";
 
 export default function AppShell({ children, title }: { children: React.ReactNode; title?: string }) {
-  const { state } = useCart();
   return (
     <div className="flex w-full">
       <Sidebar />
@@ -20,18 +17,6 @@ export default function AppShell({ children, title }: { children: React.ReactNod
             <button className="relative rounded-full p-2 hover:bg-[var(--muted)] border border-[var(--border)] shine">
               <Bell size={18} />
             </button>
-            <Link
-              href="/invoice/new"
-              className="relative rounded-full p-2 hover:bg-[var(--muted)] border border-[var(--border)] shine"
-              aria-label="Cart"
-            >
-              <ShoppingCart size={18} />
-              {state.items.length > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 w-5 text-xs rounded-full bg-[var(--accent)] text-black flex items-center justify-center">
-                  {state.items.length}
-                </span>
-              )}
-            </Link>
           </div>
         </header>
         <div className="p-4 md:p-8 space-y-4 animate-fade-in">{children}</div>

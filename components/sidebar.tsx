@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Boxes, Home, Package2, Receipt, Settings, ShoppingCart, Waypoints, BarChart3 } from "lucide-react";
-import { useCart } from "./cart-provider";
+import { Boxes, Home, Package2, Receipt, Settings, Waypoints, BarChart3 } from "lucide-react";
+
 import clsx from "clsx";
 import { useEffect, useState } from "react";
 
@@ -19,7 +19,7 @@ const nav = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { state } = useCart();
+
   const [license, setLicense] = useState<{ daysLeft?: number; valid?: boolean; error?: string } | null>(null);
 
   useEffect(() => {
@@ -59,20 +59,11 @@ export default function Sidebar() {
             >
               <Icon size={18} />
               <span className="text-sm">{item.label}</span>
-              {item.href.startsWith("/invoice") && state.items.length > 0 && (
-                <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-[var(--accent)] text-black">
-                  {state.items.length}
-                </span>
-              )}
             </Link>
           );
         })}
       </nav>
       <div className="mt-auto space-y-1 text-xs">
-        <div className="flex items-center gap-2 text-gray-400">
-          <ShoppingCart size={14} />
-          <span>{state.items.length} items in cart</span>
-        </div>
         <div className="px-2 py-1 rounded-md border text-[11px] border-[var(--border)] text-gray-300">
           {license && license.daysLeft !== undefined
             ? `License: ${license.daysLeft} day${license.daysLeft === 1 ? "" : "s"} left`
