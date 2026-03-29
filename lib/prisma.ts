@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import path from "path";
 import { pathToFileURL } from "url";
+import os from "os";
 
 // Ensure SQLite URL points to an absolute path (helps when Next runs from .next or packaged contexts)
 const ensureDbUrl = () => {
@@ -12,13 +13,37 @@ const ensureDbUrl = () => {
   // If URL is valid file:// or file:/// format, trust it (Electron sets this)
   if (url && (url.startsWith("file://") || url.startsWith("file:///"))) {
     if (isDev) console.log("[prisma.ts] Using Electron-provided DATABASE_URL");
-    return; // URL is already valid, don't override
+    return;
   }
   
   // If URL is missing or uses relative path, convert to absolute
   if (!url || url.startsWith("file:./")) {
-    const abs = path.join(process.cwd(), "prisma", "dev.db");
-    process.env.DATABASE_URL = pathToFileURL(abs).toString();
+    let dbPath: string;
+    
+    // In production (Electron), use user's app data directory
+    if (!isDev && process.platform === "win32") {
+      const userDataPath = process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming");
+      const appDataFolder = path.join(userDataPath, "SPrintInventory");
+      
+      // Create folder if it doesn't exist (will work after build)
+      try {
+        if (typeof require !== "undefined") {
+          const fs = require("fs");
+          if (!fs.existsSync(appDataFolder)) {
+            fs.mkdirSync(appDataFolder, { recursive: true });
+          }
+        }
+      } catch (e) {
+        // Ignore errors, use cwd fallback
+      }
+      
+      dbPath = path.join(appDataFolder, "dev.db");
+    } else {
+      // Development or other platforms
+      dbPath = path.join(process.cwd(), "prisma", "dev.db");
+    }
+    
+    process.env.DATABASE_URL = pathToFileURL(dbPath).toString();
     if (isDev) console.log("[prisma.ts] Set DATABASE_URL to:", process.env.DATABASE_URL?.slice(0, 50) + "...");
   }
 };
