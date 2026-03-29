@@ -173,10 +173,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       await prisma.$transaction(async (tx) => {
         for (const item of items) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { currentStock: { increment: item.quantity } },
-          });
+          // Check if product still exists before updating
+          const product = await tx.product.findUnique({ where: { id: item.productId } });
+          if (product) {
+            await tx.product.update({
+              where: { id: item.productId },
+              data: { currentStock: { increment: item.quantity } },
+            });
+          }
           await tx.stockMovement.create({
             data: {
               productId: item.productId,
