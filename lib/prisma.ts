@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import path from "path";
 import { pathToFileURL } from "url";
 import os from "os";
+import fs from "fs";
 
 // Ensure SQLite URL points to an absolute path (helps when Next runs from .next or packaged contexts)
 const ensureDbUrl = () => {
@@ -25,16 +26,13 @@ const ensureDbUrl = () => {
       const userDataPath = process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming");
       const appDataFolder = path.join(userDataPath, "SPrintInventory");
       
-      // Create folder if it doesn't exist (will work after build)
+      // Create folder if it doesn't exist
       try {
-        if (typeof require !== "undefined") {
-          const fs = require("fs");
-          if (!fs.existsSync(appDataFolder)) {
-            fs.mkdirSync(appDataFolder, { recursive: true });
-          }
+        if (!fs.existsSync(appDataFolder)) {
+          fs.mkdirSync(appDataFolder, { recursive: true });
         }
       } catch (e) {
-        // Ignore errors, use cwd fallback
+        console.error("[prisma.ts] Could not create app data folder:", e);
       }
       
       dbPath = path.join(appDataFolder, "dev.db");

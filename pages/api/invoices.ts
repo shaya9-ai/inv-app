@@ -162,39 +162,48 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === "DELETE") {
-      const id = Number(req.query.id);
-      
-      const existingInvoice = await prisma.invoice.findUnique({ where: { id } });
-      if (!existingInvoice) {
-        return res.status(404).json({ error: "Invoice not found" });
-      }
+      try {
+        const id = Number(req.query.id);
+        
+        if (isNaN(id) || id <= 0) {
+          return res.status(400).json({ error: "Invalid invoice ID" });
+        }
+        
+        const existingInvoice = await prisma.invoice.findUnique({ where: { id } });
+        if (!existingInvoice) {
+          return res.status(404).json({ error: "Invoice not found" });
+        }
 
-      const items = JSON.parse(existingInvoice.items || "[]") as { productId: number; quantity: number; buyPrice?: number }[];
+        const items = JSON.parse(existingInvoice.items || "[]") as { productId: number; quantity: number; buyPrice?: number }[];
 
-      await prisma.$transaction(async (tx) => {
-        for (const item of items) {
-          // Check if product still exists before updating
-          const product = await tx.product.findUnique({ where: { id: item.productId } });
-          if (product) {
-            await tx.product.update({
-              where: { id: item.productId },
-              data: { currentStock: { increment: item.quantity } },
+        await prisma.$transaction(async (tx) => {
+          for (const item of items) {
+            // Check if product still exists before updating
+            const product = await tx.product.findUnique({ where: { id: item.productId } });
+            if (product) {
+              await tx.product.update({
+                where: { id: item.productId },
+                data: { currentStock: { increment: item.quantity } },
+              });
+            }
+            await tx.stockMovement.create({
+              data: {
+                productId: item.productId,
+                type: "CHECK_IN",
+                quantity: item.quantity,
+                buyPrice: item.buyPrice ?? 0,
+                note: "Invoice deleted - stock restored",
+              },
             });
           }
-          await tx.stockMovement.create({
-            data: {
-              productId: item.productId,
-              type: "CHECK_IN",
-              quantity: item.quantity,
-              buyPrice: item.buyPrice ?? 0,
-              note: "Invoice deleted - stock restored",
-            },
-          });
-        }
-        await tx.invoice.delete({ where: { id } });
-      });
-      
-      return res.status(204).end();
+          await tx.invoice.delete({ where: { id } });
+        });
+        
+        return res.status(204).end();
+      } catch (error) {
+        console.error("Delete invoice error:", error);
+        return res.status(500).json({ error: "Failed to delete invoice" });
+      }
     }
 
     res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
