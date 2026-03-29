@@ -27,8 +27,9 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      data-theme="light"
     >
-      <body className="min-h-full bg-[#0a0a0f] text-gray-100 flex selection:bg-[var(--accent)]/30 selection:text-white">
+      <body className="min-h-full bg-[var(--background)] text-[var(--foreground)] flex selection:bg-[var(--accent)]/30 selection:text-white">
         <Providers>{children}</Providers>
       </body>
     </html>

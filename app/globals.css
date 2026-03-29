@@ -1,6 +1,22 @@
 @import "tailwindcss";
 
 :root {
+  /* Light mode (default) */
+  --background: #f5f5f5;
+  --foreground: #0a0a0f;
+  --accent: #f7c848;
+  --muted: #e8e8f0;
+  --card: radial-gradient(circle at 20% 20%, rgba(0,0,0,0.03), rgba(0,0,0,0) 35%), #ffffff;
+  --border: rgba(0, 0, 0, 0.08);
+  --glow: rgba(247, 200, 72, 0.25);
+  --shadow-strong: 0 25px 80px rgba(0, 0, 0, 0.08);
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  --input-bg: #ffffff;
+  --hover-bg: rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme="dark"] {
   --background: #0b0b10;
   --foreground: #f5f5f5;
   --accent: #f7c848;
@@ -9,6 +25,10 @@
   --border: rgba(255, 255, 255, 0.08);
   --glow: rgba(247, 200, 72, 0.35);
   --shadow-strong: 0 25px 80px rgba(0, 0, 0, 0.45);
+  --text-secondary: #9ca3af;
+  --text-tertiary: #6b7280;
+  --input-bg: #0f0f17;
+  --hover-bg: rgba(255, 255, 255, 0.05);
 }
 
 @theme inline {
@@ -25,11 +45,28 @@
 }
 
 body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+html[data-theme="dark"] body {
   background: radial-gradient(circle at 10% 20%, rgba(247, 200, 72, 0.08), transparent 25%),
     radial-gradient(circle at 90% 10%, rgba(88, 132, 255, 0.08), transparent 20%),
     linear-gradient(135deg, #0c0c12 0%, #07070c 50%, #090912 100%);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+}
+
+html[data-theme="light"] body {
+  background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 50%, #f0f0f5 100%);
 }
 
 .card {
@@ -66,6 +103,22 @@ input[type="email"],
 input[type="date"],
 select {
   pointer-events: auto;
+  background-color: var(--input-bg);
+  color: var(--foreground);
+  transition: all 0.2s ease;
+}
+
+select option {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+input[type="number"]::placeholder,
+input[type="text"]::placeholder,
+input[type="tel"]::placeholder,
+input[type="email"]::placeholder,
+input[type="date"]::placeholder {
+  color: var(--text-tertiary);
 }
 
 input[type="number"]:focus,
@@ -78,8 +131,13 @@ input[type="date"]:focus {
   box-shadow: 0 0 0 2px rgba(247, 200, 72, 0.2);
 }
 
-/* Make native date picker icon visible on dark backgrounds */
+/* Make native date picker icon visible on all themes */
 input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none;
+  opacity: 0.6;
+}
+
+html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(1) brightness(1.6);
   opacity: 0.9;
 }
@@ -100,11 +158,20 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .input {
-  background: #0f0f17;
+  background: var(--muted);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 10px 12px;
-  color: #f5f5f5;
+  color: var(--foreground);
+  transition: all 0.2s ease;
+}
+
+html[data-theme="dark"] .input {
+  background: #0f0f17;
+}
+
+html[data-theme="light"] .input {
+  background: #ffffff;
 }
 
 .chip {
