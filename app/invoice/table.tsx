@@ -239,7 +239,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
           </table>
           <div class="totals">
             <div class="total-row">Subtotal: Rs ${formattedSubtotal}</div>
-            ${inv.discount > 0 ? `<div class="discount">Discount: ${inv.discount}${inv.discountType === "PERCENT" ? "%" : ""}</div>` : ""}
+            ${inv.discount > 0 ? `<div class="discount">Discount: ${inv.discountType === "PERCENT" ? inv.discount + "%" : "Rs " + inv.discount}</div>` : ""}
             <div class="grand-total">Total: Rs ${formattedTotal}</div>
           </div>
           <div class="footer">
