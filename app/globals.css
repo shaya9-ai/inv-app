@@ -63,6 +63,7 @@ input[type="number"],
 input[type="text"],
 input[type="tel"],
 input[type="email"],
+input[type="date"],
 select {
   pointer-events: auto;
 }
@@ -70,10 +71,17 @@ select {
 input[type="number"]:focus,
 input[type="text"]:focus,
 input[type="tel"]:focus,
-input[type="email"]:focus {
+input[type="email"]:focus,
+input[type="date"]:focus {
   outline: none;
   border-color: var(--accent) !important;
   box-shadow: 0 0 0 2px rgba(247, 200, 72, 0.2);
+}
+
+/* Make native date picker icon visible on dark backgrounds */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.6);
+  opacity: 0.9;
 }
 
 .btn-primary {

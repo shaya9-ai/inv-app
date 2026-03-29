@@ -459,23 +459,24 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
       .report-title { font-size: 14px; font-weight: 900; margin: 4px 0; color: #000; letter-spacing: 1px; }
       .report-info { font-size: 9px; color: #666; }
       .divider { border-top: 2px solid #000; margin: 5px 0; }
-      .items-table { width: 100%; border-collapse: collapse; font-size: 10px; }
-      .items-table th { background: #000; color: #fff; text-align: left; padding: 3px 3px; font-weight: 900; letter-spacing: 0.5px; }
-      .items-table td { padding: 2px 3px; border-bottom: 1px solid #ddd; vertical-align: top; }
+      .items-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+      .items-table th { background: #000; color: #fff; text-align: left; padding: 4px 4px; font-weight: 900; letter-spacing: 0.5px; }
+      .items-table td { padding: 3px 4px; border-bottom: 1px solid #ccc; vertical-align: top; font-weight: 600; color: #111; }
       .sno-col { width: 8%; text-align: center; }
       .prod-col { width: 44%; }
       .qty-col { width: 8%; text-align: center; }
       .cost-col { width: 20%; text-align: right; }
       .sale-col { width: 20%; text-align: right; }
-      .sno { text-align: center; font-weight: bold; }
-      .prod-name { font-weight: bold; }
-      .qty { text-align: center; }
-      .cost, .sale { text-align: right; }
-      .grand-total-box { background: #000; color: #fff; padding: 6px 8px; font-weight: bold; }
-      .grand-label { font-size: 14px; font-weight: 900; text-align: center; margin-bottom: 4px; border-bottom: 2px solid #fff; padding-bottom: 4px; letter-spacing: 1px; }
-      .grand-row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 10px; }
-      .grand-row.profit span:last-child { color: #86efac; }
-      .grand-row.loss span:last-child { color: #fca5a5; }
+      .sno { text-align: center; font-weight: 900; }
+      .prod-name { font-weight: 800; color: #000; }
+      .qty { text-align: center; font-weight: 700; }
+      .cost, .sale { text-align: right; font-weight: 800; }
+      .grand-total-box { background: #000; color: #fff; padding: 8px 10px; font-weight: 900; }
+      .grand-label { font-size: 16px; font-weight: 900; text-align: center; margin-bottom: 6px; border-bottom: 2px solid #fff; padding-bottom: 6px; letter-spacing: 1px; }
+      .grand-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; font-weight: 700; }
+      .grand-row span { font-weight: 800; }
+      .grand-row.profit span:last-child { color: #86efac; font-weight: 900; }
+      .grand-row.loss span:last-child { color: #fca5a5; font-weight: 900; }
       .footer { text-align: center; margin-top: 6px; padding-top: 5px; border-top: 2px solid #000; }
       .thank-you { font-size: 14px; font-weight: 900; margin-bottom: 3px; letter-spacing: 1px; }
       .footer-text { font-size: 8px; color: #666; }
@@ -561,7 +562,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
         </div>
       </div>
 
-      <div className="card p-4">
+      <div className="card p-4 overflow-visible relative z-10" style={{ overflow: "visible" }}>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <div className="flex flex-wrap items-center gap-2">
             {(["all", "today", "yesterday", "week", "month"] as const).map((filter) => (
@@ -591,7 +592,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
               <ChevronDown size={12} />
             </button>
             {showDatePicker && (
-              <div className="absolute top-full left-0 mt-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 z-50 shadow-xl animate-scale-in">
+              <div className="absolute top-full left-0 mt-2 bg-[#0f0f17]/98 border border-[var(--border)]/80 rounded-lg p-4 z-50 shadow-2xl backdrop-blur-md animate-scale-in">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-xs text-gray-400">Select Date Range</p>
                   <button onClick={() => setShowDatePicker(false)} className="text-gray-500 hover:text-white">
