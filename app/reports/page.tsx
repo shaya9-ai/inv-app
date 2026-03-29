@@ -86,10 +86,9 @@ async function getReportData() {
       } catch {
         continue;
       }
-      for (const item of items) {
-        const buyPrice = item.buyPrice ?? 0;
-        totalProfit += (item.price - buyPrice) * item.quantity;
-      }
+      const totalCost = items.reduce((sum, item) => sum + ((item.buyPrice ?? 0) * item.quantity), 0);
+      const saleAfterDiscount = inv.total;
+      totalProfit += saleAfterDiscount - totalCost;
     }
     return totalProfit;
   };

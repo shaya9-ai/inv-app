@@ -353,13 +353,6 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
     });
   }, [parsed, search, dateFilter, customDateFrom, customDateTo]);
 
-  const calculateProfit = (inv: InvoiceWithItems) => {
-    return inv.parsedItems.reduce((sum, item) => {
-      const buyPrice = item.buyPrice ?? 0;
-      return sum + (item.price - buyPrice) * item.quantity;
-    }, 0);
-  };
-
   const calculateCost = (inv: InvoiceWithItems) => {
     return inv.parsedItems.reduce((sum, item) => {
       const buyPrice = item.buyPrice ?? 0;
@@ -367,28 +360,47 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
     }, 0);
   };
 
+  const calculateProfit = (inv: InvoiceWithItems) => {
+    return inv.total - calculateCost(inv);
+  };
+
   const printAllInvoices = () => {
     const grandTotalCost = filtered.reduce((sum, inv) => sum + calculateCost(inv), 0);
+    const grandTotalSaleBeforeDiscount = filtered.reduce((sum, inv) => {
+      return sum + inv.parsedItems.reduce((s, item) => s + item.price * item.quantity, 0);
+    }, 0);
+    const grandTotalDiscount = filtered.reduce((sum, inv) => {
+      const discountValue = inv.discountType === "PERCENT" 
+        ? (inv.subtotal * inv.discount) / 100 
+        : inv.discount;
+      return sum + discountValue;
+    }, 0);
     const grandTotalSale = filtered.reduce((sum, inv) => sum + inv.total, 0);
     const grandTotalProfit = filtered.reduce((sum, inv) => sum + calculateProfit(inv), 0);
 
     let globalSNo = 0;
-    const allProductRows = filtered.flatMap((inv) =>
-      inv.parsedItems.map((item) => {
+    const allProductRows = filtered.flatMap((inv) => {
+      const invSubtotal = inv.parsedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const discountValue = inv.discountType === "PERCENT" 
+        ? (invSubtotal * inv.discount) / 100 
+        : inv.discount;
+      return inv.parsedItems.map((item) => {
         globalSNo++;
         const itemCost = (item.buyPrice ?? 0) * item.quantity;
-        const itemSale = item.price * item.quantity;
+        const itemSaleBefore = item.price * item.quantity;
+        const itemDiscount = invSubtotal > 0 ? (itemSaleBefore / invSubtotal) * discountValue : 0;
+        const itemSaleAfter = itemSaleBefore - itemDiscount;
         return `
           <tr>
             <td class="sno">${globalSNo}</td>
             <td class="prod-name">${item.name}${item.unit ? ` (${item.unit})` : ""}</td>
             <td class="qty">${item.quantity}</td>
             <td class="cost">Rs ${itemCost.toLocaleString("en-PK")}</td>
-            <td class="sale">Rs ${itemSale.toLocaleString("en-PK")}</td>
+            <td class="sale">Rs ${itemSaleAfter.toLocaleString("en-PK")}</td>
           </tr>
         `;
-      })
-    ).join('');
+      });
+    }).join('');
 
     const content = `
       <div class="receipt">
@@ -428,7 +440,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
           </div>
           <div class="grand-row ${grandTotalProfit >= 0 ? 'profit' : 'loss'}">
             <span>Total Profit:</span>
-            <span>Rs ${grandTotalProfit.toLocaleString("en-PK")}</span>
+            <span>Rs ${grandTotalProfit >= 0 ? '+' : ''}${grandTotalProfit.toLocaleString("en-PK")}</span>
           </div>
         </div>
         <div class="footer">
