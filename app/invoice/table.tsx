@@ -533,17 +533,17 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
   return (
     <div>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-        <div className="card p-4 bg-gradient-to-br from-[#1a1a22] to-[#12121a] border border-[var(--accent)]/30">
-          <p className="text-xs text-gray-400 uppercase tracking-wider">Total Sales</p>
+        <div className="card p-4 bg-gradient-to-br from-[var(--card)] to-[var(--muted)] border border-[var(--accent)]/30">
+          <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider">Total Sales</p>
           <p className="text-2xl font-bold text-[var(--accent)] mt-1">Rs {totalSales.toLocaleString("en-PK")}</p>
-          <p className="text-xs text-gray-500 mt-1">{filtered.length} invoices</p>
+          <p className="text-xs text-[var(--text-tertiary)] mt-1">{filtered.length} invoices</p>
         </div>
-        <div className="card p-4 bg-gradient-to-br from-[#1a1a22] to-[#12121a] border border-orange-500/30">
+        <div className="card p-4 bg-gradient-to-br from-[var(--card)] to-[var(--muted)] border border-orange-500/30">
           <p className="text-xs text-orange-400 uppercase tracking-wider">Total Cost</p>
           <p className="text-2xl font-bold text-orange-400 mt-1">Rs {totalCost.toLocaleString("en-PK")}</p>
-          <p className="text-xs text-gray-500 mt-1">Buy price</p>
+          <p className="text-xs text-[var(--text-tertiary)] mt-1">Buy price</p>
         </div>
-        <div className={`card p-4 bg-gradient-to-br from-[#1a1a22] to-[#12121a] border ${isProfit ? "border-green-500/30" : "border-red-500/30"}`}>
+        <div className={`card p-4 bg-gradient-to-br from-[var(--card)] to-[var(--muted)] border ${isProfit ? "border-green-500/30" : "border-red-500/30"}`}>
           <p className={`text-xs uppercase tracking-wider ${isProfit ? "text-green-400" : "text-red-400"}`}>Total Profit</p>
           <p className={`text-2xl font-bold mt-1 ${isProfit ? "text-green-400" : "text-red-400"}`}>
             Rs {totalProfit.toLocaleString("en-PK")}
@@ -552,17 +552,17 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
             {isProfit ? "+" : ""}{profitMargin.toFixed(1)}% margin
           </p>
         </div>
-        <div className="card p-4 bg-gradient-to-br from-[#1a1a22] to-[#12121a] border border-blue-500/30">
-          <p className="text-xs text-gray-400 uppercase tracking-wider">Avg Profit</p>
+        <div className="card p-4 bg-gradient-to-br from-[var(--card)] to-[var(--muted)] border border-blue-500/30">
+          <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider">Avg Profit</p>
           <p className={`text-2xl font-bold mt-1 ${isProfit ? "text-blue-400" : "text-red-400"}`}>
             Rs {filtered.length > 0 ? Math.round(totalProfit / filtered.length).toLocaleString("en-PK") : 0}
           </p>
-          <p className="text-xs text-gray-500 mt-1">Per invoice</p>
+          <p className="text-xs text-[var(--text-tertiary)] mt-1">Per invoice</p>
         </div>
-        <div className="card p-4 bg-gradient-to-br from-[#1a1a22] to-[#12121a] border border-purple-500/30">
-          <p className="text-xs text-gray-400 uppercase tracking-wider">Period</p>
+        <div className="card p-4 bg-gradient-to-br from-[var(--card)] to-[var(--muted)] border border-purple-500/30">
+          <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider">Period</p>
           <p className="text-lg font-bold text-purple-400 mt-1">{getFilterLabel()}</p>
-          <p className="text-xs text-gray-500 mt-1">Filtered view</p>
+          <p className="text-xs text-[var(--text-tertiary)] mt-1">Filtered view</p>
         </div>
       </div>
 
@@ -576,7 +576,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
               className={`px-3 py-1.5 text-xs rounded-lg border transition-all ${
                 dateFilter === filter
                   ? "bg-[var(--accent)] text-black border-[var(--accent)]"
-                  : "border-[var(--border)] text-gray-400 hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                  : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
               }`}
             >
               {filter === "all" ? "All" : filter === "today" ? "Today" : filter === "yesterday" ? "Yesterday" : filter === "week" ? "Week" : "Month"}
@@ -588,7 +588,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
               className={`px-3 py-1.5 text-xs rounded-lg border flex items-center gap-1 transition-all ${
                 dateFilter === "custom"
                   ? "bg-[var(--accent)] text-black border-[var(--accent)]"
-                  : "border-[var(--border)] text-gray-400 hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                  : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
               }`}
             >
               <Calendar size={12} />
@@ -596,22 +596,22 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
               <ChevronDown size={12} />
             </button>
             {showDatePicker && (
-              <div className="absolute top-full left-0 mt-2 bg-[#0f0f17]/98 border border-[var(--border)]/80 rounded-lg p-4 z-50 shadow-2xl backdrop-blur-md animate-scale-in">
+              <div className="absolute top-full left-0 mt-2 bg-[var(--muted)]/98 border border-[var(--border)]/80 rounded-lg p-4 z-50 shadow-2xl backdrop-blur-md animate-scale-in">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs text-gray-400">Select Date Range</p>
-                  <button onClick={() => setShowDatePicker(false)} className="text-gray-500 hover:text-white">
+                  <p className="text-xs text-[var(--text-secondary)]">Select Date Range</p>
+                  <button onClick={() => setShowDatePicker(false)} className="text-[var(--text-tertiary)] hover:text-[var(--foreground)]">
                     <X size={14} />
                   </button>
                 </div>
                 <div className="flex flex-col gap-2 mb-3">
-                  <label className="text-xs text-gray-400">From</label>
+                  <label className="text-xs text-[var(--text-secondary)]">From</label>
                   <input
                     type="date"
                     value={customDateFrom}
                     onChange={(e) => setCustomDateFrom(e.target.value)}
                     className="input text-sm"
                   />
-                  <label className="text-xs text-gray-400">To</label>
+                  <label className="text-xs text-[var(--text-secondary)]">To</label>
                   <input
                     type="date"
                     value={customDateTo}
@@ -637,7 +637,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
               aria-label="Search invoices"
             />
             {search && (
-              <button onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+              <button onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--foreground)]">
                 <X size={14} />
               </button>
             )}
@@ -662,13 +662,13 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
 
         {(dateFilter !== "all" || search) && (
         <div className="flex items-center justify-between mb-3 text-xs">
-          <span className="text-gray-400">
+          <span className="text-[var(--text-secondary)]">
             Showing <span className="text-[var(--accent)]">{filtered.length}</span> of {parsed.length} invoices
             {dateFilter !== "all" && ` (${getFilterLabel()})`}
           </span>
           <button
             onClick={() => { setDateFilter("all"); setSearch(""); setCustomDateFrom(""); setCustomDateTo(""); }}
-            className="text-gray-400 hover:text-[var(--accent)] flex items-center gap-1"
+            className="text-[var(--text-secondary)] hover:text-[var(--accent)] flex items-center gap-1"
           >
             <X size={12} /> Clear filters
           </button>
@@ -678,7 +678,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="text-left text-gray-400">
+          <thead className="text-left text-[var(--text-secondary)]">
             <tr className="border-b border-[var(--border)]">
               <th className="py-2">Invoice #</th>
               <th>Customer</th>
@@ -693,16 +693,16 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-8 text-center text-gray-500">
+                <td colSpan={6} className="py-8 text-center text-[var(--text-tertiary)]">
                   No invoices found for the selected period
                 </td>
               </tr>
             ) : filtered.map((inv) => (
-              <tr key={inv.id} className="border-b border-[var(--border)] hover:bg-white/5 transition-colors">
+              <tr key={inv.id} className="border-b border-[var(--border)] hover:bg-[var(--hover-bg)] transition-colors">
                 <td className="py-2 font-semibold">#{inv.invoiceNumber}</td>
                 <td className="leading-tight">
                   <div>{inv.customerName || "Walk-in"}</div>
-                  {inv.customerPhone && <div className="text-xs text-gray-400">{inv.customerPhone}</div>}
+                  {inv.customerPhone && <div className="text-xs text-[var(--text-secondary)]">{inv.customerPhone}</div>}
                 </td>
                 <td className="py-2">
                   <div className="flex flex-wrap gap-1">
@@ -718,14 +718,14 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
                     )}
                   </div>
                 </td>
-                <td className="text-gray-400 font-semibold">Rs {formatMoney(calculateCost(inv), 0)}</td>
+                <td className="text-[var(--text-secondary)] font-semibold">Rs {formatMoney(calculateCost(inv), 0)}</td>
                 <td className="text-[var(--accent)] font-semibold">Rs {formatMoney(inv.total, 2)}</td>
                 <td className={`font-semibold ${calculateProfit(inv) >= 0 ? "text-green-400" : "text-red-400"}`}>
                   Rs {calculateProfit(inv) >= 0 ? "+" : ""}{formatMoney(calculateProfit(inv), 0)}
                 </td>
                 <td>
                   <div className="text-sm">{format(inv.createdAt, "dd MMM yyyy")}</div>
-                  <div className="text-xs text-gray-400">{format(inv.createdAt, "hh:mm a")}</div>
+                  <div className="text-xs text-[var(--text-secondary)]">{format(inv.createdAt, "hh:mm a")}</div>
                 </td>
                 <td className="py-2">
                   <div className="flex gap-1.5">
@@ -751,7 +751,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
           <div className="card w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 shadow-glow animate-scale-in">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Edit Invoice #{editing.invoiceNumber}</h3>
-              <button onClick={() => setEditing(null)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setEditing(null)} className="text-[var(--text-secondary)] hover:text-[var(--foreground)]">
                 ✕
               </button>
             </div>
@@ -819,7 +819,7 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
 
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="text-gray-400 text-left">
+                <thead className="text-[var(--text-secondary)] text-left">
                   <tr className="border-b border-[var(--border)]">
                     <th className="py-2">Product</th>
                     <th>Qty</th>
@@ -873,8 +873,8 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
 
             <div className="flex justify-between items-center mt-4">
               <div>
-                <p className="text-sm text-gray-400">Subtotal: Rs {formatMoney(totals.subtotal, 2)}</p>
-                <p className="text-sm text-gray-400">Total: Rs {formatMoney(totals.total, 2)}</p>
+                <p className="text-sm text-[var(--text-secondary)]">Subtotal: Rs {formatMoney(totals.subtotal, 2)}</p>
+                <p className="text-sm text-[var(--text-secondary)]">Total: Rs {formatMoney(totals.total, 2)}</p>
               </div>
               <div className="flex gap-3">
                 <button onClick={() => setEditing(null)} className="btn border border-[var(--border)]">

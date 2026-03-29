@@ -102,7 +102,7 @@ export default function CheckinGrid({ products }: Props) {
             />
             <button
               onClick={() => setQuery("")}
-              className="text-xs text-gray-400 hover:text-white border border-[var(--border)] rounded-lg px-2 py-1"
+              className="text-xs text-[var(--text-secondary)] hover:text-[var(--foreground)] border border-[var(--border)] rounded-lg px-2 py-1"
             >
               Clear
             </button>
@@ -142,19 +142,19 @@ export default function CheckinGrid({ products }: Props) {
         </div>
       </div>
 
-      <aside className="w-full bg-[#0f0f17] border-l border-[var(--border)] sticky top-4 p-4 md:p-6 shadow-glow animate-slide-in-right">
+      <aside className="w-full bg-[var(--muted)] border-l border-[var(--border)] sticky top-4 p-4 md:p-6 shadow-glow animate-slide-in-right">
         <div className="flex items-center justify-between mb-3">
           <div>
             <p className="text-xs uppercase text-gray-500">Supplier</p>
             <input
               placeholder="Supplier name"
-              className="w-full bg-[#15151f] rounded-lg px-3 py-2 text-sm border border-[var(--border)] mt-1"
+              className="w-full bg-[var(--input-bg)] rounded-lg px-3 py-2 text-sm border border-[var(--border)] mt-1"
               value={supplierName}
               onChange={(e) => setSupplierName(e.target.value)}
             />
             <input
               placeholder="Note"
-              className="w-full bg-[#15151f] rounded-lg px-3 py-2 text-sm border border-[var(--border)] mt-2"
+              className="w-full bg-[var(--input-bg)] rounded-lg px-3 py-2 text-sm border border-[var(--border)] mt-2"
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
@@ -165,7 +165,7 @@ export default function CheckinGrid({ products }: Props) {
               setSupplierName("");
               setNote("");
             }}
-            className="text-xs text-gray-400 hover:text-white border border-[var(--border)] px-2 py-1 rounded-lg"
+            className="text-xs text-[var(--text-secondary)] hover:text-[var(--foreground)] border border-[var(--border)] px-2 py-1 rounded-lg"
           >
             Clear
           </button>
@@ -176,7 +176,7 @@ export default function CheckinGrid({ products }: Props) {
           {items.map((item) => (
             <div
               key={item.productId}
-              className="bg-[#15151f] border border-[var(--border)] rounded-xl p-3 flex gap-3 items-start shine"
+              className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-3 flex gap-3 items-start shine"
             >
               <div className="flex-1">
                 <p className="font-semibold">{item.name}</p>
@@ -185,7 +185,7 @@ export default function CheckinGrid({ products }: Props) {
                   <span className="text-xs text-gray-400">Qty</span>
                   <input
                     type="number"
-                    className="h-8 w-16 text-center rounded-lg bg-[#0f0f17] border border-[var(--border)]"
+                    className="h-8 w-16 text-center rounded-lg bg-[var(--input-bg)] border border-[var(--border)]"
                     value={item.quantity}
                     onChange={(e) => updateQty(item.productId, Number(e.target.value))}
                   />
@@ -194,7 +194,7 @@ export default function CheckinGrid({ products }: Props) {
                   <span className="text-xs text-gray-400">Unit price</span>
                   <input
                     type="number"
-                    className="h-8 w-24 rounded-lg bg-[#0f0f17] border border-[var(--border)] px-2"
+                    className="h-8 w-24 rounded-lg bg-[var(--input-bg)] border border-[var(--border)] px-2"
                     value={item.price}
                     onChange={(e) => updatePrice(item.productId, Number(e.target.value))}
                   />
@@ -216,7 +216,7 @@ export default function CheckinGrid({ products }: Props) {
             <span>Rs {totals.subtotal.toFixed(2)}</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex items-center bg-[#15151f] rounded-lg border border-[var(--border)] overflow-hidden text-xs">
+            <div className="flex items-center bg-[var(--input-bg)] rounded-lg border border-[var(--border)] overflow-hidden text-xs">
               <button
                 onClick={() => setDiscountType("AMOUNT")}
                 className={clsx("px-3 py-2", discountType === "AMOUNT" && "bg-[var(--accent)] text-black")}
@@ -263,7 +263,7 @@ export default function CheckinGrid({ products }: Props) {
         </div>
 
         {receipt && (
-          <div className="mt-4 p-3 rounded-lg border border-[var(--border)] bg-[#13131c]">
+          <div className="mt-4 p-3 rounded-lg border border-[var(--border)] bg-[var(--muted)]">
             <div className="flex items-center justify-between text-sm">
               <p className="font-semibold">#{receipt.receiptNumber}</p>
               <button className="text-xs text-[var(--accent)]" onClick={() => openGrnPrint(receipt)}>

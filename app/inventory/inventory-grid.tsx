@@ -194,7 +194,7 @@ export default function InventoryGrid({ products: initial }: Props) {
             />
             <button
               onClick={() => setQuery("")}
-              className="text-xs text-gray-400 hover:text-white border border-[var(--border)] rounded-lg px-2 py-1"
+              className="text-xs text-[var(--text-secondary)] hover:text-[var(--foreground)] border border-[var(--border)] rounded-lg px-2 py-1"
             >
               Clear
             </button>
@@ -295,7 +295,7 @@ export default function InventoryGrid({ products: initial }: Props) {
               <h3 className="text-lg font-semibold">
                 {editing ? "Edit Product" : "Add Product"}
               </h3>
-              <button onClick={() => { setOpenForm(false); resetForm(); }} className="text-gray-400 hover:text-white">
+              <button onClick={() => { setOpenForm(false); resetForm(); }} className="text-[var(--text-secondary)] hover:text-[var(--foreground)]">
                 ✕
               </button>
             </div>
@@ -370,4 +370,4 @@ export default function InventoryGrid({ products: initial }: Props) {
 
 // simple input style
 const inputClass =
-  "input bg-[#0f0f17] border border-[var(--border)] rounded-lg px-3 py-2 focus:outline-none";
+  "input bg-[var(--input-bg)] border border-[var(--border)] rounded-lg px-3 py-2 focus:outline-none";

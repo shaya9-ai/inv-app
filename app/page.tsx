@@ -200,7 +200,7 @@ export default async function Home() {
           <p className="text-sm text-gray-400 mb-2">Low Stock Alerts</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {lowStock.map((p) => (
-              <div key={p.id} className="p-3 rounded-lg bg-[#1a1a22] border border-[var(--border)] shine">
+              <div key={p.id} className="p-3 rounded-lg bg-[var(--card)] border border-[var(--border)] shine">
                 <p className="font-semibold">{p.name}</p>
                 <p className="text-xs text-gray-400">{p.category}</p>
                 <p className="text-sm text-red-400 mt-1">{p.currentStock} left</p>

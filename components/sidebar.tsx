@@ -34,7 +34,7 @@ export default function Sidebar() {
   }, []);
 
   return (
-    <aside className="w-64 min-h-screen sticky top-0 px-4 py-6 border-r border-[var(--border)] bg-[#0d0d15]/90 hidden md:flex flex-col gap-6 backdrop-blur-xl shadow-glow">
+    <aside className="w-64 min-h-screen sticky top-0 px-4 py-6 border-r border-[var(--border)] bg-[var(--background)]/95 hidden md:flex flex-col gap-6 backdrop-blur-xl shadow-glow">
       <div className="flex items-center gap-3 font-bold text-lg tracking-tight animate-scale-in">
         <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[#f59e0b] text-black flex items-center justify-center font-black shadow-glow">
           S
@@ -64,7 +64,7 @@ export default function Sidebar() {
         })}
       </nav>
       <div className="mt-auto space-y-1 text-xs">
-        <div className="px-2 py-1 rounded-md border text-[11px] border-[var(--border)] text-gray-300">
+        <div className="px-2 py-1 rounded-md border text-[11px] border-[var(--border)] text-[var(--text-secondary)]">
           {license && license.daysLeft !== undefined
             ? `License: ${license.daysLeft} day${license.daysLeft === 1 ? "" : "s"} left`
             : "License: activated"}
