@@ -344,7 +344,7 @@ async function createWindow() {
       splash?.destroy();
       win.show();
     }
-  }, 8000);
+  },3000);
 }
 
 app.whenReady().then(createWindow);

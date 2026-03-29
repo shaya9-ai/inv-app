@@ -174,32 +174,47 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           return res.status(404).json({ error: "Invoice not found" });
         }
 
-        const items = JSON.parse(existingInvoice.items || "[]") as { productId: number; quantity: number; buyPrice?: number }[];
+        let items: { productId: number; quantity: number; buyPrice?: number }[] = [];
+        try {
+          items = JSON.parse(existingInvoice.items || "[]");
+        } catch {
+          items = [];
+        }
 
+        // Delete invoice first, then restore stock
         await prisma.$transaction(async (tx) => {
-          for (const item of items) {
-            // Check if product still exists before updating
-            const product = await tx.product.findUnique({ where: { id: item.productId } });
-            if (product) {
-              await tx.product.update({
-                where: { id: item.productId },
-                data: { currentStock: { increment: item.quantity } },
-              });
-            }
-            await tx.stockMovement.create({
-              data: {
-                productId: item.productId,
-                type: "CHECK_IN",
-                quantity: item.quantity,
-                buyPrice: item.buyPrice ?? 0,
-                note: "Invoice deleted - stock restored",
-              },
-            });
-          }
+          // Delete invoice first
           await tx.invoice.delete({ where: { id } });
+          
+          // Then restore stock for each item
+          for (const item of items) {
+            try {
+              // Check if product exists
+              const product = await tx.product.findUnique({ where: { id: item.productId } });
+              if (product) {
+                await tx.product.update({
+                  where: { id: item.productId },
+                  data: { currentStock: { increment: item.quantity } },
+                });
+              }
+              // Create stock movement record
+              await tx.stockMovement.create({
+                data: {
+                  productId: item.productId,
+                  type: "CHECK_IN",
+                  quantity: item.quantity,
+                  buyPrice: item.buyPrice ?? 0,
+                  note: "Invoice deleted - stock restored",
+                },
+              });
+            } catch (itemErr) {
+              console.error("Error restoring stock for item:", itemErr);
+              // Continue with other items
+            }
+          }
         });
         
-        return res.status(204).end();
+        return res.status(200).json({ success: true });
       } catch (error) {
         console.error("Delete invoice error:", error);
         return res.status(500).json({ error: "Failed to delete invoice" });

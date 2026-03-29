@@ -120,11 +120,18 @@ export default function InvoiceList({ invoices, products }: { invoices: Invoice[
 
   const remove = async (id: number) => {
     if (!confirm("Delete invoice?")) return;
-    const res = await fetch("/api/invoices?id=" + id, { method: "DELETE" });
-    if (res.ok) {
-      toast.success("Deleted");
-      window.location.reload();
-    } else toast.error("Failed");
+    try {
+      const res = await fetch("/api/invoices?id=" + id, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        toast.success("Invoice deleted");
+        window.location.reload();
+      } else {
+        toast.error(data.error || "Failed to delete");
+      }
+    } catch (err) {
+      toast.error("Network error");
+    }
   };
 
   const print = (inv: InvoiceWithItems) => {
