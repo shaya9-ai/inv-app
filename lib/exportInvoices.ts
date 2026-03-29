@@ -31,10 +31,8 @@ function calculateCost(inv: InvoiceWithItems): number {
 }
 
 function calculateProfit(inv: InvoiceWithItems): number {
-  return inv.parsedItems.reduce((sum, item) => {
-    const buyPrice = item.buyPrice ?? 0;
-    return sum + (item.price - buyPrice) * item.quantity;
-  }, 0);
+  const cost = calculateCost(inv);
+  return Math.round((inv.total - cost) * 100) / 100;
 }
 
 // Professional styling helpers
@@ -144,7 +142,7 @@ export function exportToExcel(invoices: Invoice[], filename: string = "invoices"
       { v: inv.customerName || "Walk-in", s: dataStyle(bgColor) },
       { v: inv.customerPhone || "-", s: dataStyle(bgColor) },
       { v: itemsList, s: { ...dataStyle(bgColor), alignment: { horizontal: "left", vertical: "center", wrapText: true } } },
-      { v: inv.discount > 0 ? inv.discount : "", s: numberStyle(bgColor) },
+      { v: inv.discount > 0 ? (inv.discountType === "PERCENT" ? inv.discount + "%" : "Rs " + inv.discount) : "", s: dataStyle(bgColor) },
       { v: cost, s: numberStyle(bgColor) },
       { v: inv.total, s: numberStyle(bgColor) },
       { v: profit, s: { ...numberStyle(profitColor), color: profit >= 0 ? "047857" : "DC2626", bold: true } },

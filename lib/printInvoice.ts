@@ -132,7 +132,7 @@ export function openInvoicePrint(inv: InvoiceData) {
         </table>
         <div class="totals">
           <div class="total-row">Subtotal: Rs ${numbers.subtotal.toFixed(0)}</div>
-          ${inv.discount > 0 ? `<div class="discount">Discount: ${inv.discount}${inv.discountType === "PERCENT" ? "%" : ""}</div>` : ""}
+          ${inv.discount > 0 ? `<div class="discount">Discount: ${inv.discountType === "PERCENT" ? inv.discount + "%" : "Rs " + inv.discount}</div>` : ""}
           <div class="grand-total">Total: Rs ${numbers.total.toFixed(0)}</div>
         </div>
         <div class="footer">
