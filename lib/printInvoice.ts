@@ -42,6 +42,9 @@ export function openInvoicePrint(inv: InvoiceData) {
       body { max-width: 190mm; margin: 80mm; }
     `;
 
+  const formatMoney = (n: number, fraction: number = 0) =>
+    n.toLocaleString("en-PK", { minimumFractionDigits: fraction, maximumFractionDigits: fraction });
+
   const numbers = calculateTotal({
     items: inv.parsedItems as any,
     discount: inv.discount,
@@ -50,10 +53,15 @@ export function openInvoicePrint(inv: InvoiceData) {
     customerPhone: inv.customerPhone ?? "",
   });
 
-  const win = window.open("", "_blank", "width=800,height=900");
-  if (!win) return;
+  const formattedSubtotal = formatMoney(numbers.subtotal, 0);
+  const formattedTotal = formatMoney(numbers.total, 0);
 
-  win.document.write(`
+  const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+  const logoVector = `${baseUrl}${LOGO_VECTOR_SRC}`;
+  const logoFallback = `${baseUrl}${LOGO_FALLBACK_SRC}`;
+  const qrSrc = `${baseUrl}${scanmeImage.src}`;
+
+  const html = `
     <html>
       <head>
         <title>Invoice #${inv.invoiceNumber}</title>
@@ -75,6 +83,16 @@ export function openInvoicePrint(inv: InvoiceData) {
           th { font-weight: bold; background: #000; color: #fff; }
           .header { margin-bottom: 2pt; text-align: center; border-bottom: 3pt solid #000; padding-bottom: 2pt; }
           .header svg { margin: 0 auto 2pt; }
+          .logo-img {
+            width: 140px;
+            height: auto;
+            margin: 0 auto 4pt;
+            display: block;
+            image-rendering: optimizeQuality;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            filter: grayscale(1) contrast(2.8) brightness(0.1);
+          }
           .invoice-title { font-size: 12pt; font-weight: bold; margin: 0; }
           .company { font-size: 15pt; margin: 6pt 0; font-weight: 700; }
           .customer { font-size: 9pt; margin: 1pt 0; font-weight: 700; }
@@ -89,59 +107,61 @@ export function openInvoicePrint(inv: InvoiceData) {
           .footer img { margin: 4pt auto; display: block; border: none; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .terms { font-size: 7pt; margin-top: 2pt; line-height: 1.08; text-align: left; }
           .terms strong { font-weight: bold; }
-          .terms ul { margin: 1pt 0 0 0; padding: 0; list-style-type: none; }
-          .terms li { margin: 0.5pt 0; padding-left: 6pt; position: relative; }
+          .terms ul { margin: 1pt 0 0 0; padding: 0; list-style-type: none;  }
+          .terms li { margin: 0.5pt 0; padding-left: 6pt; position: relative; font-size: 8pt; }
           .terms li:before { content: "•"; position: absolute; left: 0; }
           @media print {
             ${pageCss}
           }
         </style>
-        </head>
-        <body>
-          <div class="header">
-            <img src="${LOGO_VECTOR_SRC}" onerror="this.onerror=null;this.src='${LOGO_FALLBACK_SRC}'" alt="Logo" style="width: 140px; height: auto; margin: 0 auto 4pt; display: block; image-rendering: optimizeQuality;" />
-            <div class="company">S•PRINT TECH MOBILE</div>
-            <div class="company">ACCESSORIES</div>
-            <div class="invoice-num">#${inv.invoiceNumber}</div>
-            <div class="date">${format(inv.createdAt, "dd MMM yyyy, HH:mm")}</div>
-            ${inv.customerName ? `<div class="customer"><strong>${inv.customerName}</strong></div>` : ""}
+      </head>
+      <body>
+        <div class="header">
+          <img src="${logoVector}" onerror="this.onerror=null;this.src='${logoFallback}'" alt="Logo" class="logo-img" />
+          <div class="company">S•PRINT TECH MOBILE</div>
+          <div class="company">ACCESSORIES</div>
+          <div class="invoice-num">#${inv.invoiceNumber}</div>
+          <div class="date">${format(inv.createdAt, "dd MMM yyyy, HH:mm")}</div>
+          ${inv.customerName ? `<div class="customer"><strong>${inv.customerName}</strong></div>` : ""}
           ${inv.customerPhone ? `<div class="customer">Ph: ${inv.customerPhone}</div>` : ""}
         </div>
         <table>
           <thead>
             <tr>
+              <th style="width:10%; text-align: center;">S.No</th>
               <th style="width:15%; text-align: center;">Qty</th>
-              <th style="width:50%; text-align: left;">Product</th>
-              <th style="width:17%; text-align: right;">Price</th>
-              <th style="width:18%; text-align: right;">Total</th>
+              <th style="width:45%; text-align: left;">Product</th>
+              <th style="width:15%; text-align: right;">Price</th>
+              <th style="width:15%; text-align: right;">Total</th>
             </tr>
           </thead>
           <tbody>
             ${inv.parsedItems
               .map(
-                (it: any) =>
+                (it, idx) =>
                   `<tr>
-                    <td style="text-align: center;">${it.quantity}x</td>
+                    <td style="text-align: center;">${idx + 1}</td>
+                    <td style="text-align: center;">${it.quantity}</td>
                     <td>${it.name}${it.unit ? ` (${it.unit})` : ""}</td>
-                    <td style="text-align: right;">Rs${it.price}</td>
-                    <td style="text-align: right;">Rs${(it.price * it.quantity).toFixed(0)}</td>
+                    <td style="text-align: right;">Rs${Number(it.price).toLocaleString("en-PK")}</td>
+                    <td style="text-align: right;">Rs${(it.price * it.quantity).toLocaleString("en-PK")}</td>
                   </tr>`
               )
               .join("")}
           </tbody>
         </table>
         <div class="totals">
-          <div class="total-row">Subtotal: Rs ${numbers.subtotal.toFixed(0)}</div>
+          <div class="total-row">Subtotal: Rs ${formattedSubtotal}</div>
           ${inv.discount > 0 ? `<div class="discount">Discount: ${inv.discountType === "PERCENT" ? inv.discount + "%" : "Rs " + inv.discount}</div>` : ""}
-          <div class="grand-total">Total: Rs ${numbers.total.toFixed(0)}</div>
+          <div class="grand-total">Total: Rs ${formattedTotal}</div>
         </div>
         <div class="footer">
           <p>Thank you for business!</p>
           <p>Luckyone Mall, Karachi</p>
           <p>Ph: 03012276178</p>
-          <h6>We love to hear your feedback!</h6>
-          <h6>Scan the QR Code to write a review</h6>
-          <img src="${scanmeImage.src}" alt="QR Code" style="width: 150px; height: auto; margin: 8pt auto; border: none; padding: 0;" />
+          <h3 class="text-lg font-bold" style="margin: 6pt 0 0;">We love to hear your feedback!</h3>
+          <h2 class="text-lg font-bold mt-8">Scan the QR Code to write a review</h2>
+          <img src="${qrSrc}" alt="QR Code" style="width: 150px; height: auto; margin: 8pt auto; border: none; padding: 0;" />
           <div class="terms">
             <strong>Terms & Conditions:</strong>
             <ul>
@@ -160,11 +180,30 @@ export function openInvoicePrint(inv: InvoiceData) {
             <p>Powered by VNE Digital</p>
             <p>www.vnedigital.com</p>
           </div>
-        </body>
-      </html>
-  `);
+        </div>
+      </body>
+    </html>
+  `;
+
+  // If running inside Electron, ask the main process to open in default browser via POST (writes temp file).
+  const isElectron = typeof navigator !== "undefined" && navigator.userAgent.includes("Electron");
+  if (isElectron) {
+    fetch("/open-external", {
+      method: "POST",
+      headers: { "Content-Type": "text/html" },
+      body: html,
+    }).catch(() => {});
+    return;
+  }
+
+  // Fallback: open a new tab/window and trigger print.
+  const win = window.open("", "_blank", "width=800,height=900");
+  if (!win) return;
+  win.document.write(html);
   win.document.close();
-  win.print();
+  setTimeout(() => {
+    win.print();
+  }, 1000);
 }
 
 export function openGrnPrint(rec: ReceiptData) {
@@ -268,5 +307,7 @@ export function openGrnPrint(rec: ReceiptData) {
     </html>
   `);
   win.document.close();
-  win.print();
+  setTimeout(() => {
+    win.print();
+  }, 1000);
 }

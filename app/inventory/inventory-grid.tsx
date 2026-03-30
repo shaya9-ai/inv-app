@@ -6,8 +6,7 @@ import { useCart } from "../../components/cart-provider";
 import CartSidebar from "../../components/cart-sidebar";
 import { PlusCircle, Edit, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { calculateTotal } from "../../lib/cartMath";
-
+import { calculateTotal } from "../../lib/cartMath";import { openInvoicePrint } from "../../lib/printInvoice";
 type Props = {
   products: Product[];
 };
@@ -81,73 +80,6 @@ export default function InventoryGrid({ products: initial }: Props) {
     }
   };
 
-  const openPrint = (invoice: any) => {
-    const receiptMode = window.confirm("Use 80mm receipt mode? Cancel = A4");
-    const pageCss = receiptMode
-      ? "@page { size: 80mm auto; margin: 4mm; } body { width: 76mm; }"
-      : "@page { size: A4; margin: 12mm; }";
-    const numbers = calculateTotal({
-      items: invoice.parsedItems ?? state.items,
-      discount: invoice.discount,
-      discountType: invoice.discountType,
-      customerName: invoice.customerName,
-      customerPhone: invoice.customerPhone,
-    });
-    const win = window.open("", "_blank", "width=800,height=900");
-    if (!win) return;
-    win.document.write(`
-      <html>
-        <head>
-          <title>Invoice #${invoice.invoiceNumber}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 24px; color: #000; }
-            table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-            td, th { border: 1px solid #000; padding: 6px; font-size: 12px; }
-            h1 { margin: 0; }
-            @media print { body { -webkit-print-color-adjust: exact; } ${pageCss} }
-          </style>
-        </head>
-        <body>
-          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <div>
-              <h1 style="margin:0 0 4px 0;">Invoice</h1>
-              <p style="margin:0 0 6px 0;">S• PRINT TECH MOBILE ACCESSORIES</p>
-              <p style="margin:0;">${invoice.customerName || "Customer"} (${invoice.customerPhone || ""})</p>
-            </div>
-            <div style="text-align:right">
-              <p style="margin:0 0 4px 0;">#${invoice.invoiceNumber}</p>
-              <p style="margin:0;">${invoice.createdAt}</p>
-            </div>
-          </div>
-          <table>
-            <thead>
-              <tr><th>Sr#</th><th>Product</th><th>Qty</th><th>Unit</th><th>Price</th><th>Total</th></tr>
-            </thead>
-            <tbody>
-              ${(invoice.parsedItems ?? state.items)
-                .map(
-                  (it: any, idx: number) =>
-                    `<tr><td>${idx + 1}</td><td>${it.name}</td><td>${it.quantity}</td><td>${it.unit ?? ""}</td><td>Rs ${it.price}</td><td>Rs ${(it.price * it.quantity).toFixed(2)}</td></tr>`
-                )
-                .join("")}
-            </tbody>
-          </table>
-          <p style="text-align:right; margin-top:12px;">Subtotal: Rs ${numbers.subtotal.toFixed(2)}</p>
-          <p style="text-align:right;">Discount: Rs ${invoice.discount} ${invoice.discountType}</p>
-          <p style="text-align:right; font-weight:bold; font-size:16px;">Grand Total: Rs ${numbers.total.toFixed(2)}</p>
-          <div style="margin-top:18px;">
-            <p style="margin:0 0 6px 0;">Thank you for your business!</p>
-            <p style="margin:0;">Luckyone Mall first floor opp.ideas by</p>
-            <p style="margin:0 0 4px 0;">gul ahmed</p>
-            <p style="margin:0;">03012276178 (phone and WhatsApp)</p>
-          </div>
-        </body>
-      </html>
-    `);
-    win.document.close();
-    win.print();
-  };
-
   const saveInvoice = async (print?: boolean) => {
     if (state.items.length === 0) {
       toast.error("Cart empty");
@@ -173,7 +105,7 @@ export default function InventoryGrid({ products: initial }: Props) {
     }
     const invoice = await res.json();
     toast.success("Invoice saved & stock updated");
-    if (print) openPrint(invoice);
+    if (print) openInvoicePrint(invoice);
     clear();
   };
 
@@ -237,7 +169,7 @@ export default function InventoryGrid({ products: initial }: Props) {
                 <span>Sell Rs {p.sellPrice.toFixed(2)}</span>
                 <span className="text-gray-500">Buy Rs {p.buyPrice.toFixed(2)}</span>
               </div>
-              <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-[#11111a]/90 to-black/80 opacity-0 group-hover:opacity-100 transition flex flex-col justify-center items-center gap-3 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-br from-black/30 via-black/30 to-black/30 opacity-0 group-hover:opacity-100 transition flex flex-col justify-center items-center gap-3 backdrop-blur-sm">
                 <button
                   onClick={() =>
                     addItem({

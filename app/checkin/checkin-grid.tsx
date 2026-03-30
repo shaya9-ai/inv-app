@@ -129,7 +129,7 @@ export default function CheckinGrid({ products }: Props) {
                 <span>Buy Rs {p.buyPrice.toFixed(2)}</span>
                 <span className="text-gray-500">Unit {p.unit}</span>
               </div>
-              <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-[#11111a]/90 to-black/80 opacity-0 group-hover:opacity-100 transition flex flex-col justify-center items-center gap-3 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-br from-black/30 via-black/30 to-black/30 opacity-0 group-hover:opacity-100 transition flex flex-col justify-center items-center gap-3 backdrop-blur-sm">
                 <button
                   onClick={() => addItem(p)}
                   className="btn btn-primary w-40 shadow-glow"
