@@ -106,7 +106,7 @@ export default async function Home() {
           <p className="text-sm text-gray-400">by VNE DIGITAL</p>
         </div>
         <div className="flex gap-3 mt-4 md:mt-0">
-          <a href="/invoice/new" className="btn btn-primary text-sm px-4 py-2">New Invoice</a>
+          <a href="/inventory" className="btn btn-primary text-sm px-4 py-2">New Invoice</a>
           <a href="/inventory" className="btn text-sm px-4 py-2 border border-[var(--border)]">View Inventory</a>
         </div>
       </div>
