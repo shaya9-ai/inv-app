@@ -1,11 +1,16 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, shell } = require("electron");
 const { dialog } = require("electron");
 const path = require("path");
 const http = require("http");
 const fs = require("fs");
+const os = require("os");
+const { pathToFileURL } = require("url");
 const Module = require("module");
 const next = require("next");
 const crypto = require("crypto");
+
+// Some environments (RDP/virtual GPUs) throw transient GPU command buffer errors; disable hardware acceleration to avoid crash.
+app.disableHardwareAcceleration();
 
 const isDev = !app.isPackaged;
 const port = process.env.PORT || 8124;
@@ -35,7 +40,7 @@ Module._resolveFilename = function patchedResolve(request, parent, isMain, optio
   if (request.startsWith(".prisma/client/")) {
     const relativeFile = request.replace(".prisma/client/", "");
     const devPath = path.join(__dirname, "..", "node_modules", ".prisma", "client", `${relativeFile}.js`);
-    const packagedPath = path.join(process.resourcesPath, "resources", "prisma-client", `${relativeFile}.js`);
+    const packagedPath = path.join(process.resourcesPath, "prisma-client", `${relativeFile}.js`);
     const resolvedPath = app.isPackaged ? packagedPath : devPath;
     if (fs.existsSync(resolvedPath)) {
       return resolvedPath;
@@ -49,7 +54,7 @@ Module._resolveFilename = function patchedResolve(request, parent, isMain, optio
 };
 
 function toFileUrl(filePath) {
-  // Convert a path to the SQLite-friendly URI format Prisma expects on Windows
+  // Prisma sqlite accepts file:C:/path style; avoid triple-slash URLs
   const resolved = path.resolve(filePath).replace(/\\/g, "/");
   return `file:${resolved}`;
 }
@@ -59,7 +64,12 @@ function getAppDataDir() {
 }
 
 function readPublicKey() {
-  const pubPath = path.join(__dirname, "..", "license", "public.pem");
+  // In dev we read from repo; in production the file is copied alongside app.asar
+  const devPath = path.join(__dirname, "..", "license", "public.pem");
+  const prodPath = path.join(process.resourcesPath, "license", "public.pem");
+  const asarSibling = path.join(process.resourcesPath, "public.pem");
+  const pubPath = [prodPath, asarSibling, devPath].find((p) => fs.existsSync(p));
+  if (!pubPath) throw new Error("public.pem missing");
   return fs.readFileSync(pubPath, "utf-8");
 }
 
@@ -185,16 +195,46 @@ async function prepareRuntimeFiles() {
   const userDataPath = app.getPath("userData");
   await fs.promises.mkdir(userDataPath, { recursive: true });
 
-  const packagedDbPath = path.join(process.resourcesPath, "resources", "dev.db");
+  const packagedDbPath = path.join(process.resourcesPath, "dev.db");
   const devDbPath = path.join(__dirname, "..", "prisma", "dev.db");
   const sourceDbPath = app.isPackaged ? packagedDbPath : devDbPath;
   const runtimeDbPath = path.join(userDataPath, "dev.db");
 
-  if (!fs.existsSync(runtimeDbPath) && fs.existsSync(sourceDbPath)) {
-    await fs.promises.copyFile(sourceDbPath, runtimeDbPath);
+  try {
+    console.log("[prepareRuntimeFiles] app.isPackaged:", app.isPackaged);
+    console.log("[prepareRuntimeFiles] sourceDbPath:", sourceDbPath);
+    console.log("[prepareRuntimeFiles] sourceDbPath exists:", fs.existsSync(sourceDbPath));
+    console.log("[prepareRuntimeFiles] runtimeDbPath:", runtimeDbPath);
+    console.log("[prepareRuntimeFiles] runtimeDbPath exists:", fs.existsSync(runtimeDbPath));
+    
+    if (!fs.existsSync(runtimeDbPath)) {
+      if (fs.existsSync(sourceDbPath)) {
+        console.log("[prepareRuntimeFiles] Copying database from", sourceDbPath, "to", runtimeDbPath);
+        await fs.promises.copyFile(sourceDbPath, runtimeDbPath);
+        const stats = await fs.promises.stat(runtimeDbPath);
+        console.log("[prepareRuntimeFiles] Database copied successfully, size:", stats.size, "bytes");
+      } else {
+        console.warn("[prepareRuntimeFiles] Source database not found at", sourceDbPath);
+        console.warn("[prepareRuntimeFiles] Creating new database file (schema will need to be initialized)");
+        await fs.promises.writeFile(runtimeDbPath, "");
+      }
+    } else {
+      console.log("[prepareRuntimeFiles] Using existing runtime database at", runtimeDbPath);
+    }
+
+    // Ensure writable in user data (copied files can inherit read-only from Program Files)
+    try {
+      await fs.promises.chmod(runtimeDbPath, 0o666);
+    } catch (chmodErr) {
+      console.warn("[prepareRuntimeFiles] chmod failed (non-fatal):", chmodErr.message);
+    }
+  } catch (err) {
+    console.error("[prepareRuntimeFiles] Error preparing database:", err);
   }
 
-  process.env.DATABASE_URL = toFileUrl(runtimeDbPath);
+  const dbUrl = toFileUrl(runtimeDbPath);
+  console.log("[prepareRuntimeFiles] DATABASE_URL:", dbUrl);
+  process.env.DATABASE_URL = dbUrl;
   process.env.APP_DATA_PATH = userDataPath;
 }
 
@@ -222,6 +262,50 @@ async function createWindow() {
   await nextApp.prepare();
 
   server = http.createServer(async (req, res) => {
+    // lightweight bridge to open content in the default browser from the renderer
+    if (req.url && req.url.startsWith("/open-external")) {
+      // GET: expects ?url=... (data:, http/https)
+      if (req.method === "GET" && req.url.startsWith("/open-external?url=")) {
+        const target = decodeURIComponent(req.url.slice("/open-external?url=".length));
+        try {
+          if (!/^data:text\/html[,;]/i.test(target) && !/^https?:\/\//i.test(target)) {
+            res.statusCode = 400;
+            res.end("invalid url");
+            return;
+          }
+          await shell.openExternal(target);
+          res.statusCode = 200;
+          res.end("ok");
+        } catch {
+          res.statusCode = 500;
+          res.end("fail");
+        }
+        return;
+      }
+      // POST: body contains HTML; write to temp file and open file://
+      if (req.method === "POST") {
+        let body = "";
+        req.on("data", (chunk) => (body += chunk));
+        req.on("end", async () => {
+          try {
+            if (!body) throw new Error("empty");
+            const tmpPath = path.join(os.tmpdir(), `invoice-${Date.now()}.html`);
+            await fs.promises.writeFile(tmpPath, body, "utf-8");
+            await shell.openExternal(`file://${tmpPath}`);
+            res.statusCode = 200;
+            res.end("ok");
+          } catch {
+            res.statusCode = 500;
+            res.end("fail");
+          }
+        });
+        return;
+      }
+      res.statusCode = 405;
+      res.end("method");
+      return;
+    }
+
     try {
       await handle(req, res);
     } catch (error) {
@@ -260,7 +344,7 @@ async function createWindow() {
       splash?.destroy();
       win.show();
     }
-  }, 8000);
+  },3000);
 }
 
 app.whenReady().then(createWindow);

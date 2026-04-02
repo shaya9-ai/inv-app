@@ -1,6 +1,6 @@
 import AppShell from "../components/app-shell";
 import { prisma } from "../lib/prisma";
-import { format, addMonths, startOfMonth } from "date-fns";
+import { format, addMonths, startOfMonth, startOfWeek, endOfWeek, startOfMonth as startOfMonthFn, endOfMonth as endOfMonthFn, subWeeks, subMonths, isWithinInterval } from "date-fns";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +23,39 @@ async function getStats() {
     .filter((i) => format(i.createdAt, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd"))
     .reduce((sum, i) => sum + i.total, 0);
   const lowStock = products.filter((p) => p.currentStock < 5);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const thisWeekStart = startOfWeek(today, { weekStartsOn: 1 });
+  const thisWeekEnd = endOfWeek(today, { weekStartsOn: 1 });
+  const lastWeekStart = startOfWeek(subWeeks(today, 1), { weekStartsOn: 1 });
+  const lastWeekEnd = endOfWeek(subWeeks(today, 1), { weekStartsOn: 1 });
+
+  const thisMonthStart = startOfMonthFn(today);
+  const thisMonthEnd = endOfMonthFn(today);
+  const lastMonthStart = startOfMonthFn(subMonths(today, 1));
+  const lastMonthEnd = endOfMonthFn(subMonths(today, 1));
+
+  const thisWeekSales = invoices
+    .filter((i) => isWithinInterval(new Date(i.createdAt), { start: thisWeekStart, end: thisWeekEnd }))
+    .reduce((sum, i) => sum + i.total, 0);
+  const lastWeekSales = invoices
+    .filter((i) => isWithinInterval(new Date(i.createdAt), { start: lastWeekStart, end: lastWeekEnd }))
+    .reduce((sum, i) => sum + i.total, 0);
+
+  const thisMonthSales = invoices
+    .filter((i) => isWithinInterval(new Date(i.createdAt), { start: thisMonthStart, end: thisMonthEnd }))
+    .reduce((sum, i) => sum + i.total, 0);
+  const lastMonthSales = invoices
+    .filter((i) => isWithinInterval(new Date(i.createdAt), { start: lastMonthStart, end: lastMonthEnd }))
+    .reduce((sum, i) => sum + i.total, 0);
+
+  const weekChange = lastWeekSales > 0 ? ((thisWeekSales - lastWeekSales) / lastWeekSales) * 100 : 0;
+  const monthChange = lastMonthSales > 0 ? ((thisMonthSales - lastMonthSales) / lastMonthSales) * 100 : 0;
+
+  const todayInvoices = invoices.filter((i) => format(i.createdAt, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd"));
+  const thisWeekInvoices = invoices.filter((i) => isWithinInterval(new Date(i.createdAt), { start: thisWeekStart, end: thisWeekEnd }));
 
   // Build last 6 months sales (including current)
   const monthBuckets = new Map<string, number>();
@@ -50,11 +83,19 @@ async function getStats() {
     todaySales,
     lowStock,
     monthlySales,
+    thisWeekSales,
+    lastWeekSales,
+    thisMonthSales,
+    lastMonthSales,
+    weekChange,
+    monthChange,
+    todayInvoices,
+    thisWeekInvoices,
   };
 }
 
 export default async function Home() {
-  const { products, invoices, movements, totalStockValue, todaySales, lowStock, monthlySales } = await getStats();
+  const { products, invoices, movements, totalStockValue, todaySales, lowStock, monthlySales, thisWeekSales, lastWeekSales, thisMonthSales, lastMonthSales, weekChange, monthChange, todayInvoices, thisWeekInvoices } = await getStats();
 
   return (
     <AppShell title="Dashboard">
@@ -65,24 +106,28 @@ export default async function Home() {
           <p className="text-sm text-gray-400">by VNE DIGITAL</p>
         </div>
         <div className="flex gap-3 mt-4 md:mt-0">
-          <a href="/invoice/new" className="btn btn-primary text-sm px-4 py-2">New Invoice</a>
+          <a href="/inventory" className="btn btn-primary text-sm px-4 py-2">New Invoice</a>
           <a href="/inventory" className="btn text-sm px-4 py-2 border border-[var(--border)]">View Inventory</a>
         </div>
       </div>
 
-      <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <StatCard label="Products" value={products.length.toString()} sub="Active SKUs" />
+      <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+        <StatCard label="Products" value={products.length.toString()} sub="Active SKUs" href="/inventory" />
         <StatCard
           label="Stock Value"
           value={`Rs ${totalStockValue.toFixed(0)}`}
           sub="Sell price x qty"
+          href="/inventory"
         />
-        <StatCard label="Today Sales" value={`Rs ${todaySales.toFixed(0)}`} sub="Invoices" />
+        <StatCard label="Today" value={`Rs ${todaySales.toFixed(0)}`} sub={`${todayInvoices.length} invoices`} href="/invoice?filter=today" clickable />
+        <StatCard label="This Week" value={`Rs ${thisWeekSales.toFixed(0)}`} sub={`${thisWeekInvoices.length} invoices`} change={weekChange} href="/invoice?filter=week" clickable />
+        <StatCard label="This Month" value={`Rs ${thisMonthSales.toFixed(0)}`} sub={monthChange >= 0 ? `+${monthChange.toFixed(0)}% vs last` : `${monthChange.toFixed(0)}% vs last`} change={monthChange} href="/invoice?filter=month" clickable />
         <StatCard
           label="Low Stock"
           value={`${lowStock.length}`}
           sub="<5 units"
           alert
+          href="/inventory"
         />
       </section>
 
@@ -155,7 +200,7 @@ export default async function Home() {
           <p className="text-sm text-gray-400 mb-2">Low Stock Alerts</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {lowStock.map((p) => (
-              <div key={p.id} className="p-3 rounded-lg bg-[#1a1a22] border border-[var(--border)] shine">
+              <div key={p.id} className="p-3 rounded-lg bg-[var(--card)] border border-[var(--border)] shine">
                 <p className="font-semibold">{p.name}</p>
                 <p className="text-xs text-gray-400">{p.category}</p>
                 <p className="text-sm text-red-400 mt-1">{p.currentStock} left</p>
@@ -173,19 +218,36 @@ function StatCard({
   value,
   sub,
   alert = false,
+  href,
+  clickable = false,
+  change,
 }: {
   label: string;
   value: string;
   sub: string;
   alert?: boolean;
+  href?: string;
+  clickable?: boolean;
+  change?: number;
 }) {
-  return (
+  const content = (
     <div className="card p-4 shine animate-scale-in">
       <p className="text-xs uppercase tracking-[0.2em] text-gray-400">{label}</p>
-      <p className="text-2xl font-bold mt-1">{value}</p>
-      <p className={alert ? "text-red-400 text-sm" : "text-gray-400 text-sm"}>{sub}</p>
+      <p className={`text-xl font-bold mt-1 ${clickable ? "text-[var(--accent)]" : ""}`}>{value}</p>
+      <p className={`text-xs ${alert ? "text-red-400" : change !== undefined ? (change >= 0 ? "text-green-400" : "text-red-400") : "text-gray-400"}`}>{sub}</p>
+      {change !== undefined && (
+        <p className={`text-[10px] font-semibold mt-1 ${change >= 0 ? "text-green-400" : "text-red-400"}`}>
+          {change >= 0 ? "▲" : "▼"} {Math.abs(change).toFixed(1)}% vs prev
+        </p>
+      )}
+      {clickable && <p className="text-[10px] text-[var(--accent)] mt-2 opacity-60">Click to view →</p>}
     </div>
   );
+
+  if (href) {
+    return <a href={href} className="block">{content}</a>;
+  }
+  return content;
 }
 
 function MonthlyBarChart({ data }: { data: { label: string; total: number }[] }) {

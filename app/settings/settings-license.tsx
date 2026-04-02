@@ -62,7 +62,7 @@ export default function LicensePanel() {
     <div className="card p-6 space-y-4 animate-fade-in">
       <div>
         <p className="text-sm uppercase tracking-[0.2em] text-gray-400">License</p>
-        <p className="text-lg font-semibold text-white">Activation Status</p>
+        <p className="text-lg font-semibold text-[var(--foreground)]">Activation Status</p>
       </div>
       {renderStatus()}
       <div className="space-y-2">

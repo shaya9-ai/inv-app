@@ -1,8 +1,8 @@
 {
-  "name": "inv",
+  "name": "inventory-Manager",
   "version": "0.1.0",
   "private": true,
-  "author": "xpertsphere",
+  "author": "VNE Digital",
   "main": "electron/main.js",
   "scripts": {
     "dev": "next dev",
@@ -24,6 +24,7 @@
     "react-dom": "19.2.4",
     "react-hook-form": "^7.53.0",
     "sonner": "^1.5.0",
+    "xlsx": "^0.18.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -53,24 +54,40 @@
       "electron/sync-prisma-alias.js",
       "license/public.pem",
       "package.json",
-      "prisma/schema.prisma",
+      "prisma/**/*",
       "settings.json"
     ],
     "asarUnpack": [
-      "node_modules/.prisma/client/**/*"
+      "node_modules/.prisma/client/**/*",
+      "license/public.pem",
+      "public.pem"
     ],
     "asar": true,
     "extraResources": [
       {
         "from": "prisma/dev.db",
-        "to": "resources/dev.db",
+        "to": "dev.db",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "license/public.pem",
+        "to": "license/public.pem",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "license/public.pem",
+        "to": "public.pem",
         "filter": [
           "**/*"
         ]
       },
       {
         "from": "node_modules/.prisma/client",
-        "to": "resources/prisma-client",
+        "to": "prisma-client",
         "filter": [
           "**/*"
         ]
